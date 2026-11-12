@@ -48,7 +48,7 @@ CREATE TABLE pharos_uam.employee (
 );
 
 CREATE TABLE pharos_uam.account (
-account_id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+account_id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     employee_id         TEXT NOT NULL REFERENCES pharos_uam.employee(employee_id) ON DELETE RESTRICT,
     application         TEXT NOT NULL CHECK (btrim(application) <> ''),
     environment         TEXT NOT NULL CHECK (environment IN ('Prod','UAT','Dev')),
@@ -60,7 +60,7 @@ account_id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 );
 
 CREATE TABLE pharos_uam.role (
-role_id             BIGINT GENERATED ALWAYS AS IDENTITY CONSTRAINT pk_role PRIMARY KEY,
+role_id             UUID DEFAULT gen_random_uuid() CONSTRAINT pk_role PRIMARY KEY,
     application         TEXT NOT NULL CHECK (btrim(application) <> ''),
     environment         TEXT NOT NULL CHECK (environment IN ('Prod','UAT','Dev')),
     entitlement_value   TEXT NOT NULL CHECK (btrim(entitlement_value) <> ''),
@@ -79,7 +79,7 @@ role_id             BIGINT GENERATED ALWAYS AS IDENTITY CONSTRAINT pk_role PRIMA
 );
 
 CREATE TABLE pharos_uam.role_owner (
-role_id             BIGINT NOT NULL REFERENCES pharos_uam.role(role_id) ON DELETE RESTRICT,
+role_id             UUID NOT NULL REFERENCES pharos_uam.role(role_id) ON DELETE RESTRICT,
     owner_id            TEXT NOT NULL CHECK (btrim(owner_id) <> ''),
     first_name          TEXT NOT NULL CHECK (btrim(first_name) <> ''),
     last_name           TEXT NOT NULL CHECK (btrim(last_name) <> ''),
@@ -117,9 +117,9 @@ CREATE TABLE pharos_uam.ipass_event (
 );
 
 CREATE TABLE pharos_uam.account_role (
-assignment_id       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    account_id          BIGINT NOT NULL,
-    role_id             BIGINT NOT NULL,
+assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    account_id          UUID NOT NULL,
+    role_id             UUID NOT NULL,
     application         TEXT NOT NULL,
     environment         TEXT NOT NULL,
     assigned_at         TIMESTAMPTZ NOT NULL,

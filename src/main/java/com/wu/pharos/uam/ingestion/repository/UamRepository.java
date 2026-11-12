@@ -108,17 +108,17 @@ public class UamRepository {
           .addValue("date", d == null || d.isNull() ? null : EventValidator.date(e.user(), "terminationDate")));
   }
 
-  public long saveAccount(EmployeeEvent e) {
+  public UUID saveAccount(EmployeeEvent e) {
     JsonNode a = e.user().get("account");
-    List<Long> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "environment", e.environment(),
-        "application", a.get("application").asString(), "external", a.get("accountId").asString()), (rs, i) -> rs.getLong(1));
+    List<UUID> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "environment", e.environment(),
+        "application", a.get("application").asString(), "external", a.get("accountId").asString()), (rs, i) -> rs.getObject(1, UUID.class));
     if (result.isEmpty()) {
       throw ApiException.conflict("ACCOUNT_IDENTITY_CONFLICT", "Account is already linked to a different employee");
     }
     return result.getFirst();
   }
 
-  public record RoleRow(long id) {}
+  public record RoleRow(UUID id) {}
 
   public RoleRow upsertRole(JsonNode r, EmployeeEvent e) {
     var p = new MapSqlParameterSource("application", e.user().get("account").get("application").asString())
@@ -131,14 +131,14 @@ public class UamRepository {
       .addValue("pharos", r.get("isPharosGroup").asBoolean())
       .addValue("requestable", r.get("isAvailableForRequest").asBoolean())
       .addValue("privileged", r.get("isPrivileged").asBoolean());
-    List<RoleRow> result = jdbc.query(sql.load("role/upsert"), p, (rs, i) -> new RoleRow(rs.getLong("role_id")));
+    List<RoleRow> result = jdbc.query(sql.load("role/upsert"), p, (rs, i) -> new RoleRow(rs.getObject("role_id", UUID.class)));
     if (result.isEmpty()) {
       throw ApiException.conflict("ROLE_IDENTITY_CONFLICT", "Existing entitlement has a different roleName; review the role definition");
     }
     return result.getFirst();
   }
 
-  public void saveOwners(long role, JsonNode owners) {
+  public void saveOwners(UUID role, JsonNode owners) {
     for (JsonNode o : owners) {
       jdbc.update(sql.load("owner/upsert"),
           Map.of("role", role, "owner", o.get("ownerId").asString(), "first", o.get("firstName").asString(), "last",
@@ -147,7 +147,7 @@ public class UamRepository {
     jdbc.update(sql.load("owner/reconcile"), Map.of("role", role, "owners", owners.toString()));
   }
 
-  public void retainOrCreateAssignment(EmployeeEvent e, long account, long role, JsonNode source) {
+  public void retainOrCreateAssignment(EmployeeEvent e, UUID account, UUID role, JsonNode source) {
     Instant assigned = EventValidator.timestamp(source, "assignedAt").truncatedTo(ChronoUnit.MICROS);
     List<Instant> existing = jdbc.query(sql.load("assignment/current"), Map.of("account", account, "role", role), (rs, i) -> rs
       .getObject(1, OffsetDateTime.class)
@@ -167,7 +167,7 @@ public class UamRepository {
           .addValue("event", e.eventId()));
   }
 
-  public void reconcile(EmployeeEvent e, long account) {
+  public void reconcile(EmployeeEvent e, UUID account) {
     jdbc.update(sql.load("assignment/reconcile"),
         Map.of("account", account, "event", e.eventId(), "roles", e.user().get("iPassRoles").toString()));
   }

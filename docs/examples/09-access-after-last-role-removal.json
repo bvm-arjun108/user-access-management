@@ -35,7 +35,7 @@
         "roleDescription": "KYC Analyst",
         "assignedAt": "2026-08-12T12:00:00Z",
         "assignmentStatus": "PROVISIONED",
-        "entitlementValue": "00gProdKycAnalyst001",
+        "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
         "entitlementType": "groups",
         "displayName": "KYC Analyst",
         "isPharosGroup": true,
@@ -54,7 +54,7 @@
     "employeeClass": "Employee",
     "account": {
       "application": "Okta",
-      "accountId": "00u-WU100482"
+      "accountId": "00u8k3m5n7P2qRsTu0h7"
     }
   }
 }

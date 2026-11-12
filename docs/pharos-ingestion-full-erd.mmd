@@ -36,7 +36,7 @@ erDiagram
     }
 
     ACCOUNT {
-        bigint account_id PK "Required"
+        uuid account_id PK "Required"
         text employee_id FK "Required"
         text application "Required"
         text environment "Required"
@@ -46,7 +46,7 @@ erDiagram
     }
 
     ROLE {
-        bigint role_id PK "Required"
+        uuid role_id PK "Required"
         text application "Required"
         text environment "Required"
         text entitlement_value "Required"
@@ -62,7 +62,7 @@ erDiagram
     }
 
     ROLE_OWNER {
-        bigint role_id PK,FK "Required"
+        uuid role_id PK,FK "Required"
         text owner_id PK "Required"
         text first_name "Required"
         text last_name "Required"
@@ -88,9 +88,9 @@ erDiagram
     }
 
     ACCOUNT_ROLE {
-        bigint assignment_id PK "Required"
-        bigint account_id FK "Required"
-        bigint role_id FK "Required"
+        uuid assignment_id PK "Required"
+        uuid account_id FK "Required"
+        uuid role_id FK "Required"
         text application FK "Required"
         text environment FK "Required"
         timestamptz assigned_at "Required"

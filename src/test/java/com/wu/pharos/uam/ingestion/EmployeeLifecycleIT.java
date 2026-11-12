@@ -94,7 +94,7 @@ class EmployeeLifecycleIT {
     ArrayNode roles = (ArrayNode) add.get("user").get("iPassRoles");
     roles.remove(1);
     ObjectNode role = (ObjectNode) roles.get(0).deepCopy();
-    role.put("entitlementValue", "00gProdGddAnalyst001");
+    role.put("entitlementValue", "00g6k2p4s9X5yBcDe0h7");
     role.put("roleName", "APP_Pharos_Prod_GDD_Analyst");
     role.put("roleDescription", "GDD Analyst");
     role.put("assignedAt", "2026-07-30T11:00:00Z");
@@ -211,7 +211,7 @@ class EmployeeLifecycleIT {
     ObjectNode update = next("USER_UPDATED");
     ((ObjectNode) update.get("user").get("iPassRoles").get(0)).put("roleName", "APP_Pharos_Prod_KYC_Reviewer");
     assertThat(post(update).status()).isEqualTo(409);
-    jdbc.update("UPDATE pharos_uam.role SET role_name='APP_Pharos_Prod_KYC_Reviewer' WHERE entitlement_value='00gProdKycAnalyst001'");
+    jdbc.update("UPDATE pharos_uam.role SET role_name='APP_Pharos_Prod_KYC_Reviewer' WHERE entitlement_value='00g8n4q2r6T9vWxYz0h7'");
     assertThat(post(update).status()).isEqualTo(200);
     assertThat(jdbc.queryForObject("SELECT processing_status FROM pharos_uam.ipass_event WHERE event_id=?", String.class,
         UUID.fromString(update.get("eventId").asString())))
@@ -272,9 +272,9 @@ class EmployeeLifecycleIT {
     assertThat(post(update).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(3);
     assertThat(jdbc.queryForObject("SELECT owner_id FROM pharos_uam.role_owner o JOIN pharos_uam.role r USING(role_id) WHERE r."
-        + "entitlement_value='00gProdKycAnalyst001'", String.class))
+        + "entitlement_value='00g8n4q2r6T9vWxYz0h7'", String.class))
       .isEqualTo("ROLE-OWNER-NEW");
-    assertThat(jdbc.queryForObject("SELECT is_privileged FROM pharos_uam.role WHERE entitlement_value='00gProdKycAnalyst001'", Boolean.class))
+    assertThat(jdbc.queryForObject("SELECT is_privileged FROM pharos_uam.role WHERE entitlement_value='00g8n4q2r6T9vWxYz0h7'", Boolean.class))
       .isTrue();
   }
 
@@ -328,6 +328,9 @@ class EmployeeLifecycleIT {
     assertThat(body.get("accounts").size()).isEqualTo(1);
     JsonNode account = body.get("accounts").get(0);
     assertThat(account.get("assignments").size()).isEqualTo(3);
+    UUID.fromString(account.get("assignments").get(0).get("assignmentId").asString());
+    assertThat(jdbc.queryForObject("SELECT account_id FROM pharos_uam.account LIMIT 1", UUID.class)).isNotNull();
+    assertThat(jdbc.queryForObject("SELECT role_id FROM pharos_uam.role LIMIT 1", UUID.class)).isNotNull();
     assertThat(response.body()).doesNotContain("permissionMappingStatus", "authorizationEligible", "permission_mapping_status");
     assertThat(account.get("assignments").get(0).get("owners").size()).isEqualTo(1);
     assertThat(body.get("employee").get("employee_class").asString()).isEqualTo("Employee");
@@ -357,7 +360,7 @@ class EmployeeLifecycleIT {
     String times =
         "SELECT e.updated_at,a.updated_at,r.updated_at,o.updated_at FROM pharos_uam.employee e JOIN pharos_uam.account a "
         + "USING(employee_id) JOIN pharos_uam.role r ON r.application=a.application AND r.environment=a.environment JOIN pharos_uam."
-        + "role_owner o USING(role_id) WHERE r.entitlement_value='00gProdKycAnalyst001'";
+        + "role_owner o USING(role_id) WHERE r.entitlement_value='00g8n4q2r6T9vWxYz0h7'";
     var before = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant(),
         rs.getTimestamp(3).toInstant(), rs.getTimestamp(4).toInstant()));
     ObjectNode update = next("USER_UPDATED");

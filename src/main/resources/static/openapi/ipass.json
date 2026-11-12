@@ -3,7 +3,7 @@
   "info": {
     "title": "iPass \u2192 Pharos | Employee Access API",
     "version": "2.0.0",
-    "description": "Employee-centric ingestion from iPass to Pharos. No authentication or automatic database setup is configured.\n\n| Event | Required data | Result |\n| --- | --- | --- |\n| USER_PROVISIONED | Full employee, account and approved iPassRoles | Add access or explicitly restore a terminated employee. |\n| USER_UPDATED | Full employee, account and complete current iPassRoles | Update profile and replace assignments for that account only. |\n| USER_TERMINATED | employeeId and TERMINATED status | Disable employment and close all account assignments in this deployment. |\n\nAccount identity is application + environment + accountId. Role identity is application + environment + entitlementValue. Internal numeric database keys are never sent by iPass.\n\nNew event: new UUID. Identical retry: same UUID and unchanged payload. No eventVersion; iPass must preserve employee event order. Employee identity must stay stable across source systems and rehire.\n\nCompose initializes the database from ddl/01_create_schema.sql. After schema edits, recreate the development volume with docker compose down -v followed by docker compose up -d. Example IDs and data are fictional."
+    "description": "Employee-centric ingestion from iPass to Pharos. No authentication or automatic database setup is configured.\n\n| Event | Required data | Result |\n| --- | --- | --- |\n| USER_PROVISIONED | Full employee, account and approved iPassRoles | Add access or explicitly restore a terminated employee. |\n| USER_UPDATED | Full employee, account and complete current iPassRoles | Update profile and replace assignments for that account only. |\n| USER_TERMINATED | employeeId and TERMINATED status | Disable employment and close all account assignments in this deployment. |\n\nAccount identity is application + environment + accountId. Role identity is application + environment + entitlementValue. Internal database-generated UUID keys are never sent by iPass.\n\nNew event: new UUID. Identical retry: same UUID and unchanged payload. No eventVersion; iPass must preserve employee event order. Employee identity must stay stable across source systems and rehire.\n\nCompose initializes the database from ddl/01_create_schema.sql. After schema edits, recreate the development volume with docker compose down -v followed by docker compose up -d. Example IDs and data are fictional."
   },
   "servers": [
     {
@@ -73,7 +73,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -93,7 +93,7 @@
                           "roleDescription": "GSI Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdGsiAnalyst001",
+                          "entitlementValue": "00g9p5s3u7V2xYaBc0h7",
                           "entitlementType": "groups",
                           "displayName": "GSI Analyst",
                           "isPharosGroup": true,
@@ -113,7 +113,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -132,7 +132,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -176,7 +176,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -196,7 +196,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -215,7 +215,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -259,7 +259,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -279,7 +279,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -299,7 +299,7 @@
                           "roleDescription": "GDD Analyst",
                           "assignedAt": "2026-07-30T11:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementValue": "00g6k2p4s9X5yBcDe0h7",
                           "entitlementType": "groups",
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
@@ -318,7 +318,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -376,7 +376,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-09-02T09:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -396,7 +396,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-09-02T09:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -416,7 +416,7 @@
                           "roleDescription": "GDD Analyst",
                           "assignedAt": "2026-09-02T09:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementValue": "00g6k2p4s9X5yBcDe0h7",
                           "entitlementType": "groups",
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
@@ -435,7 +435,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -479,7 +479,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-09-02T09:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -498,7 +498,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -540,7 +540,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -584,7 +584,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -604,7 +604,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -624,7 +624,7 @@
                           "roleDescription": "GDD Analyst",
                           "assignedAt": "2026-07-30T11:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementValue": "00g6k2p4s9X5yBcDe0h7",
                           "entitlementType": "groups",
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
@@ -643,7 +643,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -687,7 +687,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-08-12T12:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -706,7 +706,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -750,7 +750,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -770,7 +770,7 @@
                           "roleDescription": "GSI Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdGsiAnalyst001",
+                          "entitlementValue": "00g9p5s3u7V2xYaBc0h7",
                           "entitlementType": "groups",
                           "displayName": "GSI Analyst",
                           "isPharosGroup": true,
@@ -790,7 +790,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -809,7 +809,7 @@
                       "employeeClass": "Contractor",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -853,7 +853,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -873,7 +873,7 @@
                           "roleDescription": "GSI Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdGsiAnalyst001",
+                          "entitlementValue": "00g9p5s3u7V2xYaBc0h7",
                           "entitlementType": "groups",
                           "displayName": "GSI Analyst",
                           "isPharosGroup": true,
@@ -893,7 +893,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -912,7 +912,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -956,7 +956,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -976,7 +976,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -996,7 +996,7 @@
                           "roleDescription": "GDD Analyst",
                           "assignedAt": "2026-07-30T11:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementValue": "00g6k2p4s9X5yBcDe0h7",
                           "entitlementType": "groups",
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
@@ -1015,7 +1015,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-second-account"
+                        "accountId": "00u9j4n6p8Q3rStUv0h7"
                       }
                     }
                   }
@@ -1059,7 +1059,7 @@
                           "roleDescription": "KYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
                           "entitlementType": "groups",
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
@@ -1079,7 +1079,7 @@
                           "roleDescription": "BKYC Analyst",
                           "assignedAt": "2026-07-11T14:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
                           "entitlementType": "groups",
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
@@ -1099,7 +1099,7 @@
                           "roleDescription": "GDD Analyst",
                           "assignedAt": "2026-07-30T11:00:00Z",
                           "assignmentStatus": "PROVISIONED",
-                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementValue": "00g6k2p4s9X5yBcDe0h7",
                           "entitlementType": "groups",
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
@@ -1118,7 +1118,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u-WU100482"
+                        "accountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }

@@ -77,7 +77,7 @@ public class EmployeeEventServiceImpl implements EmployeeEventService {
         throw ApiException.conflict("REPROVISIONING_REQUIRED", "A terminated employee requires an approved USER_PROVISIONED event");
       }
       repository.saveProfile(event);
-      long account = repository.saveAccount(event);
+      var account = repository.saveAccount(event);
       // Stable ordering also avoids deadlocks when different employees share role definitions.
       List<JsonNode> roles = new ArrayList<>();
       event.user().get("iPassRoles").forEach(roles::add);
