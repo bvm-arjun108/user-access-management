@@ -219,6 +219,31 @@ class EmployeeLifecycleIT {
   }
 
   @Test
+  void databaseRejectsDuplicateAccountsRolesOwnersAndCurrentAssignments() throws Exception {
+    assertThat(post(initial).status()).isEqualTo(200);
+    assertThatThrownBy(() -> jdbc.update(
+        "INSERT INTO pharos_uam.account(employee_id,application,environment,okta_account_id) "
+        + "SELECT employee_id,application,environment,okta_account_id FROM pharos_uam.account LIMIT 1"))
+      .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
+    assertThatThrownBy(() -> jdbc.update(
+        "INSERT INTO pharos_uam.role(application,environment,entitlement_value,entitlement_type,role_name,display_name,"
+        + "role_description,is_pharos_group,is_available_for_request,is_privileged) "
+        + "SELECT application,environment,entitlement_value,entitlement_type,role_name,display_name,"
+        + "role_description,is_pharos_group,is_available_for_request,is_privileged FROM pharos_uam.role LIMIT 1"))
+      .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
+    assertThatThrownBy(() -> jdbc.update(
+        "INSERT INTO pharos_uam.role_owner(role_id,owner_id,first_name,last_name,email) "
+        + "SELECT role_id,owner_id,first_name,last_name,email FROM pharos_uam.role_owner LIMIT 1"))
+      .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
+    assertThatThrownBy(() -> jdbc.update(
+        "INSERT INTO pharos_uam.account_role(account_id,role_id,application,environment,assigned_at,assigned_by_event_id) "
+        + "SELECT account_id,role_id,application,environment,assigned_at,assigned_by_event_id "
+        + "FROM pharos_uam.account_role WHERE removed_at IS NULL LIMIT 1"))
+      .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
+    assertThat(active()).isEqualTo(3);
+  }
+
+  @Test
   void accountAndRoleEnvironmentAreEnforcedByDatabase() throws Exception {
     post(initial);
     jdbc.update("UPDATE pharos_uam.account_role SET removed_at=now(),removed_by_event_id=assigned_by_event_id");

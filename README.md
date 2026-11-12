@@ -32,6 +32,7 @@ This removes the local database data and rebuilds the schema. A normal restart k
 - Health: http://localhost:8086/actuator/health
 - Postman requests: `postman/`
 - Startup DDL: `ddl/01_create_schema.sql`
+- Data model guide: [docs/data-model.md](docs/data-model.md)
 - ER diagram and scenarios: `docs/`
 
 The API and database bind to localhost. Compose uses `${VARIABLE:-default}`; Spring configuration uses `${VARIABLE:default}`. Environment variable overrides are listed in `.env.example`. The JVM does not automatically load `.env`; export the same variables when overriding defaults.
