@@ -7,9 +7,9 @@ spring:
     virtual:
       enabled: true
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:${UAM_DB_PORT:5440}/${UAM_DB_NAME:uam}}
-    username: ${UAM_DB_USER:uam}
-    password: ${UAM_DB_PASSWORD:uamLocal}
+    url: jdbc:postgresql://localhost:5440/uam
+    username: uam
+    password: uamLocal
     hikari:
       maximum-pool-size: 10
       minimum-idle: 1

@@ -89,7 +89,6 @@ erDiagram
         timestamptz processed_at "Nullable"
         text processing_status "Required"
         jsonb payload "Required"
-        jsonb warnings "Required"
         text error_code "Nullable"
         text error_message "Nullable"
     }
@@ -117,4 +116,3 @@ erDiagram
 - Internal account_id, role_id and assignment_id are generated BIGINTs; they are not payload fields.
 - Event UUID is supplied by iPass. Event employee/account identifiers are not foreign keys because receipt can precede entity creation.
 - Termination affects the employee and every linked account in the deployment. Normal snapshots affect only their account.
-- Upgrade keeps original catalog/assignments in legacy tables until reviewed. New source IDs cannot be guessed.

@@ -1,16 +1,14 @@
-# Manual schema setup
+# Database schema
 
-Use exactly one path:
+`01_create_schema.sql` creates all six tables and their integrity constraints. There are no triggers or stored functions. Only primary-key/unique-constraint indexes and the unique current-assignment index are retained. The application SQL maintains updated_at.
 
-- Empty database: run `01_create_schema.sql`.
-- Existing four-table database: stop ingestion and run `02_upgrade_existing_schema.sql` once. Do not run the fresh-install script first.
+Compose mounts this folder into `/docker-entrypoint-initdb.d`. PostgreSQL runs the SQL files in filename order when initializing an empty database.
 
-Both scripts are transactional. They never drop data. Upgrade preserves old `role` and `employee_role` tables as `legacy_role` and `legacy_employee_role`, and keeps employees/events. New account IDs, entitlement values and owners cannot be inferred from the old data: obtain fresh iPass snapshots with new event UUIDs after upgrade. Review any old granular permission mappings before activating the new role catalog. The upgraded schema permits missing new profile fields on legacy rows; the API requires them on every new active snapshot.
-
-Fresh setup from the repository root:
+For schema changes, edit the create script and recreate the development database:
 
 ```bash
-docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U uam -d uam < ddl/01_create_schema.sql
+docker compose down -v
+docker compose up -d
 ```
 
-The application does not create, update or migrate tables. No authentication is configured.
+The reset deletes local database data. No ALTER, upgrade, or migration scripts are needed at this stage. The API itself does not execute DDL.

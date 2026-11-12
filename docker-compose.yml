@@ -11,8 +11,9 @@ services:
       - "127.0.0.1:${UAM_DB_PORT:-5440}:5432"
     volumes:
       - uam_postgres_data:/var/lib/postgresql/data
+      - ./ddl:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -26,10 +27,12 @@ services:
       POSTGRES_PASSWORD: uam_test_only
     ports:
       - "127.0.0.1:${UAM_TEST_DB_PORT:-5441}:5432"
+    volumes:
+      - ./ddl:/docker-entrypoint-initdb.d:ro
     tmpfs:
       - /var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U uam_test -d pharos_uam_test"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U uam_test -d pharos_uam_test"]
       interval: 2s
       timeout: 3s
       retries: 20

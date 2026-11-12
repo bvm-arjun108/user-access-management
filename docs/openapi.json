@@ -3,7 +3,7 @@
   "info": {
     "title": "iPass \u2192 Pharos | Employee Access API",
     "version": "2.0.0",
-    "description": "Employee-centric ingestion from iPass to Pharos. No authentication or automatic database setup is configured.\n\n| Event | Required data | Result |\n| --- | --- | --- |\n| USER_PROVISIONED | Full employee, account and approved iPassRoles | Add access or explicitly restore a terminated employee. |\n| USER_UPDATED | Full employee, account and complete current iPassRoles | Update profile and replace assignments for that account only. |\n| USER_TERMINATED | employeeId and TERMINATED status | Disable employment and close all account assignments in this deployment. |\n\nAccount identity is application + environment + accountId. Role identity is application + environment + entitlementValue. Internal numeric database keys are never sent by iPass.\n\nNew event: new UUID. Identical retry: same UUID and unchanged payload. No eventVersion; iPass must preserve employee event order. Employee identity must stay stable across source systems and rehire.\n\nRun manual DDL before starting the API. Existing four-table installations use the separate non-destructive upgrade script and fresh iPass snapshots. Example IDs and data are fictional."
+    "description": "Employee-centric ingestion from iPass to Pharos. No authentication or automatic database setup is configured.\n\n| Event | Required data | Result |\n| --- | --- | --- |\n| USER_PROVISIONED | Full employee, account and approved iPassRoles | Add access or explicitly restore a terminated employee. |\n| USER_UPDATED | Full employee, account and complete current iPassRoles | Update profile and replace assignments for that account only. |\n| USER_TERMINATED | employeeId and TERMINATED status | Disable employment and close all account assignments in this deployment. |\n\nAccount identity is application + environment + accountId. Role identity is application + environment + entitlementValue. Internal numeric database keys are never sent by iPass.\n\nNew event: new UUID. Identical retry: same UUID and unchanged payload. No eventVersion; iPass must preserve employee event order. Employee identity must stay stable across source systems and rehire.\n\nCompose initializes the database from ddl/01_create_schema.sql. After schema edits, recreate the development volume with docker compose down -v followed by docker compose up -d. Example IDs and data are fictional."
   },
   "servers": [
     {
@@ -1130,40 +1130,17 @@
         },
         "responses": {
           "200": {
-            "description": "Processed. Check processingStatus and warnings.",
+            "description": "Saved successfully. An identical retry returns the same acknowledgement without repeating changes.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EventResult"
                 },
                 "examples": {
-                  "applied": {
+                  "success": {
                     "value": {
                       "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
-                      "processingStatus": "APPLIED",
-                      "processedAt": "2026-11-10T14:00:01Z",
-                      "warnings": []
-                    }
-                  },
-                  "mappingPending": {
-                    "value": {
-                      "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
-                      "processingStatus": "APPLIED",
-                      "processedAt": "2026-11-10T14:00:01Z",
-                      "warnings": [
-                        {
-                          "code": "ROLE_MAPPING_PENDING",
-                          "message": "IPASS-PROD-KYC-001 is stored but grants no permissions until its Pharos mapping is activated."
-                        }
-                      ]
-                    }
-                  },
-                  "duplicate": {
-                    "value": {
-                      "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
-                      "processingStatus": "DUPLICATE",
-                      "processedAt": "2026-11-10T14:00:01Z",
-                      "warnings": []
+                      "status": "SUCCESS"
                     }
                   }
                 }
@@ -1888,9 +1865,7 @@
         "additionalProperties": false,
         "required": [
           "eventId",
-          "processingStatus",
-          "processedAt",
-          "warnings"
+          "status"
         ],
         "properties": {
           "eventId": {
@@ -1901,41 +1876,14 @@
             "x-database-type": "UUID",
             "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
           },
-          "processingStatus": {
+          "status": {
             "type": "string",
             "enum": [
-              "APPLIED",
-              "DUPLICATE"
-            ],
-            "description": "APPLIED: processed successfully. DUPLICATE: already applied; no repeated changes."
-          },
-          "processedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Processing completion time; original completion time for a duplicate."
-          },
-          "warnings": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "code",
-                "message"
-              ],
-              "properties": {
-                "code": {
-                  "type": "string"
-                },
-                "message": {
-                  "type": "string"
-                }
-              }
-            },
-            "description": "Follow-up items. ROLE_MAPPING_PENDING: role saved without granular permissions. TERMINATION_ROLES_IGNORED: roles discarded during termination. [] means no warnings."
+              "SUCCESS"
+            ]
           }
         },
-        "description": "Result of processing this event."
+        "description": "Successful event acknowledgement."
       },
       "Error": {
         "type": "object",

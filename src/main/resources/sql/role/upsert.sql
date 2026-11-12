@@ -4,6 +4,6 @@ VALUES (:application,:environment,:entitlement,:entitlementType,:name,:displayNa
 ON CONFLICT(application,environment,entitlement_value) DO UPDATE SET
 entitlement_type=EXCLUDED.entitlement_type,display_name=EXCLUDED.display_name,
 role_description=EXCLUDED.role_description,is_pharos_group=EXCLUDED.is_pharos_group,
-is_available_for_request=EXCLUDED.is_available_for_request,is_privileged=EXCLUDED.is_privileged
+is_available_for_request=EXCLUDED.is_available_for_request,is_privileged=EXCLUDED.is_privileged,updated_at=clock_timestamp()
 WHERE role.role_name=EXCLUDED.role_name
-RETURNING role_id,permission_mapping_status
+RETURNING role_id

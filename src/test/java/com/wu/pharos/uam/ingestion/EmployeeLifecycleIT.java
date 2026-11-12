@@ -81,7 +81,11 @@ class EmployeeLifecycleIT {
     Reply first = post(initial);
     assertThat(first.status()).isEqualTo(200);
     assertThat(active()).isEqualTo(3);
-    assertThat(first.body().get("warnings").size()).isEqualTo(3);
+    assertThat(first.body().size()).isEqualTo(2);
+    assertThat(jdbc.queryForObject("SELECT processing_status FROM pharos_uam.ipass_event WHERE event_id=?", String.class,
+        UUID.fromString(initial.get("eventId").asString())))
+      .isEqualTo("APPLIED");
+    assertThat(first.body().get("status").asString()).isEqualTo("SUCCESS");
     ObjectNode update = next("USER_UPDATED");
     ((ArrayNode) update.get("user").get("iPassRoles")).remove(1);
     assertThat(post(update).status()).isEqualTo(200);
@@ -111,9 +115,8 @@ class EmployeeLifecycleIT {
   void duplicateAndChangedPayloadAreDifferent() throws Exception {
     Reply first = post(initial);
     Reply duplicate = post(initial);
-    assertThat(duplicate.body().get("processingStatus").asString()).isEqualTo("DUPLICATE");
-    assertThat(duplicate.body().get("processedAt")).isEqualTo(first.body().get("processedAt"));
-    assertThat(duplicate.body().get("warnings")).isEqualTo(first.body().get("warnings"));
+    assertThat(duplicate.status()).isEqualTo(200);
+    assertThat(duplicate.body()).isEqualTo(first.body());
     ((ObjectNode) initial.get("user")).put("site", "New York");
     assertThat(post(initial).status()).isEqualTo(409);
     assertThat(active()).isEqualTo(3);
@@ -179,7 +182,7 @@ class EmployeeLifecycleIT {
     Reply response = post(p);
     assertThat(response.status()).isEqualTo(200);
     assertThat(active()).isZero();
-    assertThat(response.body().get("warnings").get(0).get("code").asString()).isEqualTo("TERMINATION_ROLES_IGNORED");
+    assertThat(response.body().get("status").asString()).isEqualTo("SUCCESS");
   }
 
   @Test
@@ -196,10 +199,9 @@ class EmployeeLifecycleIT {
     }
     var replies = calls.stream().map(CompletableFuture::join).toList();
     assertThat(replies).allMatch(r -> r.status() == 200);
-    assertThat(replies
-      .stream()
-      .filter(r -> r.body().get("processingStatus").asString().equals("APPLIED"))
-      .count()).isEqualTo(1);
+    assertThat(replies).allMatch(r -> r.body().get("status").asString().equals("SUCCESS"));
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_event WHERE processing_status='APPLIED'", Long.class)).isEqualTo(
+        1);
     assertThat(active()).isEqualTo(3);
   }
 
@@ -332,5 +334,43 @@ class EmployeeLifecycleIT {
     assertThat(account.get("assignments").get(0).get("owners").size()).isEqualTo(1);
     assertThat(body.get("employee").get("employee_class").asString()).isEqualTo("Employee");
     assertThat(body.get("employee").get("manager_display_name").asString()).isEqualTo("Maya Patel");
+  }
+
+  @Test
+  void eventLookupContainsOnlyIngestionDetails() throws Exception {
+    post(initial);
+    var response = http.send(HttpRequest
+          .newBuilder(URI.create("http://localhost:" + port + "/api/v1/ipass/events/" + initial.get("eventId").asString()))
+          .GET()
+          .build(), HttpResponse.BodyHandlers.ofString());
+    assertThat(response.statusCode()).isEqualTo(200);
+    JsonNode body = mapper.readTree(response.body());
+    assertThat(body.get("processingStatus").asString()).isEqualTo("APPLIED");
+    assertThat(body.has("warnings")).isFalse();
+    assertThat(response.body()).doesNotContain("ROLE_MAPPING_PENDING");
+  }
+
+  @Test
+  void timestampsAreUpdatedByApplicationWithoutTriggers() throws Exception {
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c."
+        + "relnamespace WHERE n.nspname='pharos_uam' AND NOT t.tgisinternal", Long.class))
+      .isZero();
+    assertThat(post(initial).status()).isEqualTo(200);
+    String times =
+        "SELECT e.updated_at,a.updated_at,r.updated_at,o.updated_at FROM pharos_uam.employee e JOIN pharos_uam.account a "
+        + "USING(employee_id) JOIN pharos_uam.role r ON r.application=a.application AND r.environment=a.environment JOIN pharos_uam."
+        + "role_owner o USING(role_id) WHERE r.entitlement_value='00gProdKycAnalyst001'";
+    var before = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant(),
+        rs.getTimestamp(3).toInstant(), rs.getTimestamp(4).toInstant()));
+    ObjectNode update = next("USER_UPDATED");
+    ((ObjectNode) update.get("user")).put("site", "New York");
+    assertThat(post(update).status()).isEqualTo(200);
+    var after = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant(),
+        rs.getTimestamp(3).toInstant(), rs.getTimestamp(4).toInstant()));
+    for (int j = 0; j < 4; j++) {
+      assertThat(after.get(j)).isAfter(before.get(j));
+    }
+    assertThat(post(termination()).status()).isEqualTo(200);
+    assertThat(jdbc.queryForObject("SELECT updated_at FROM pharos_uam.employee", java.sql.Timestamp.class).toInstant()).isAfter(after.get(0));
   }
 }

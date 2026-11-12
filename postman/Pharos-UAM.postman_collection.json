@@ -117,7 +117,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Duplicate\",()=>pm.expect(pm.response.json().processingStatus).to.eql(\"DUPLICATE\"));"
+                  "pm.test(\"Duplicate\",()=>pm.expect(pm.response.json().status).to.eql(\"SUCCESS\"));"
                 ]
               }
             }

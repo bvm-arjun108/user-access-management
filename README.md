@@ -5,12 +5,20 @@ Java 21 · Spring Boot · Maven · PostgreSQL · Spring JDBC
 ## Run
 
 ```bash
-docker compose up -d --wait postgres
-docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U uam -d uam < ddl/01_create_schema.sql
+docker compose up -d
 mvn spring-boot:run
 ```
 
-For an empty database, run the DDL once before starting the API. Existing four-table databases must instead run `ddl/02_upgrade_existing_schema.sql` with ingestion stopped; see `ddl/README.md`. The API does not initialize or migrate the database. No authentication or special Spring profile is required.
+PostgreSQL runs all `ddl/*.sql` files in filename order when creating the database. There is one create script for the six tables. No upgrade scripts, migration tools, authentication, or special Spring profile are required.
+
+After editing the schema, recreate the development database:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+This removes the local database data and rebuilds the schema. A normal restart keeps existing data and does not rerun initialization scripts.
 
 | Setting | Default |
 | --- | --- |
@@ -23,12 +31,10 @@ For an empty database, run the DDL once before starting the API. Existing four-t
 - Swagger: http://localhost:8086/swagger-ui.html
 - Health: http://localhost:8086/actuator/health
 - Postman requests: `postman/`
-- Manual DDL: `ddl/01_create_schema.sql`
+- Startup DDL: `ddl/01_create_schema.sql`
 - ER diagram and scenarios: `docs/`
 
 The API and database bind to localhost. Compose uses `${VARIABLE:-default}`; Spring configuration uses `${VARIABLE:default}`. Environment variable overrides are listed in `.env.example`. The JVM does not automatically load `.env`; export the same variables when overriding defaults.
-
-**Existing Docker volume:** changing POSTGRES_DB/USER/PASSWORD does not change an already initialized database. Existing volumes keep their data and original credentials. Update that database manually or point Compose at a separate empty volume. Do not delete an existing volume unless its data is disposable.
 
 ## API
 
@@ -52,15 +58,14 @@ Granular permission editing and external session revocation are separate integra
 mvn test
 ```
 
-For HTTP/PostgreSQL integration tests, prepare the separate disposable test database manually:
+For HTTP/PostgreSQL integration tests, start the separate disposable test database:
 
 ```bash
 docker compose --profile test up -d --wait postgres-test
-docker compose exec -T postgres-test psql -v ON_ERROR_STOP=1 -U uam_test -d pharos_uam_test < ddl/01_create_schema.sql
 mvn verify
 ```
 
-Apply test DDL once per empty test database. Tests truncate only the dedicated database whose name ends in `_test`. They never run DDL against the main database. TEST_DB_URL, TEST_DB_USER and TEST_DB_PASSWORD override test connections. The test database uses temporary storage.
+The test database runs the same startup DDL automatically when initialized. Tests truncate only the dedicated database whose name ends in `_test`. They never run DDL against the main database. TEST_DB_URL, TEST_DB_USER and TEST_DB_PASSWORD override test connections. The test database uses temporary storage.
 
 ## Account and role metadata
 
@@ -71,3 +76,5 @@ Each supplied role carries a complete owners list. [] clears owners; missing/nul
 isAvailableForRequest and isPrivileged are stored role metadata and never activate permissions. isPrivileged is placed at role level under the agreed sample; confirm its source meaning before production integration. Existing entitlement names require review before renaming; displayName, description, flags and owners can update normally. New catalog entries remain PENDING.
 
 Employee class is preserved as source text. Human employee/contractor ingestion still requires a Workday/VNDLY identity and profile. Robot/service-account lifecycle is not implemented by inventing employment data.
+
+Database setup contains no triggers or stored functions. Optional query indexes are deferred until needed. Only key/uniqueness indexes are retained; updated_at is maintained by application SQL.

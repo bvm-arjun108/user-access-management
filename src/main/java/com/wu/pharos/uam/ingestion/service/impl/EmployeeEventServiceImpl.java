@@ -2,7 +2,6 @@ package com.wu.pharos.uam.ingestion.service.impl;
 
 import com.wu.pharos.uam.common.error.ApiException;
 import com.wu.pharos.uam.ingestion.dto.EventResult;
-import com.wu.pharos.uam.ingestion.dto.EventResult.Warning;
 import com.wu.pharos.uam.ingestion.model.EmployeeEvent;
 import com.wu.pharos.uam.ingestion.model.EventType;
 import com.wu.pharos.uam.ingestion.repository.UamRepository;
@@ -49,7 +48,7 @@ public class EmployeeEventServiceImpl implements EmployeeEventService {
     });
     try {
       EventResult result = Objects.requireNonNull(transaction.execute(status -> apply(event)));
-      LOG.info("iPass event processed eventId={} type={} result={}", event.eventId(), event.eventType(), result.processingStatus());
+      LOG.info("iPass event processed eventId={} type={} result={}", event.eventId(), event.eventType(), result.status());
       return result;
     } catch (RuntimeException failure) {
       String code = failure instanceof ApiException e ? e.code() : "PROCESSING_FAILED";
@@ -67,17 +66,12 @@ public class EmployeeEventServiceImpl implements EmployeeEventService {
     repository.lockEmployee(event.employeeId());
     EventRow receipt = repository.event(event, true);
     if ("APPLIED".equals(receipt.status())) {
-      return new EventResult(event.eventId(), "DUPLICATE", receipt.processedAt(), receipt.warnings());
+      return new EventResult(event.eventId(), "SUCCESS");
     }
     validator.validate(event);
-    List<Warning> warnings = new ArrayList<>();
     if (event.eventType() == EventType.USER_TERMINATED) {
       repository.terminate(event);
       repository.terminateAssignments(event);
-      JsonNode roles = event.user().get("iPassRoles");
-      if (roles != null && !roles.isNull() && (!roles.isArray() || !roles.isEmpty())) {
-        warnings.add(new Warning("TERMINATION_ROLES_IGNORED", "Supplied roles were ignored; employment is terminated"));
-      }
     } else {
       if ("TERMINATED".equals(repository.status(event.employeeId())) && event.eventType() != EventType.USER_PROVISIONED) {
         throw ApiException.conflict("REPROVISIONING_REQUIRED", "A terminated employee requires an approved USER_PROVISIONED event");
@@ -91,16 +85,11 @@ public class EmployeeEventServiceImpl implements EmployeeEventService {
       for (JsonNode role : roles) {
         var storedRole = repository.upsertRole(role, event);
         repository.saveOwners(storedRole.id(), role.get("owners"));
-        if ("PENDING".equals(storedRole.mappingStatus())) {
-          warnings.add(
-              new Warning("ROLE_MAPPING_PENDING", role.get("entitlementValue").asString() + " is stored but grants no granular permissions"));
-        }
         repository.retainOrCreateAssignment(event, account, storedRole.id(), role);
       }
       repository.reconcile(event, account);
     }
-    repository.applied(event, warnings);
-    EventRow applied = repository.event(event, false);
-    return new EventResult(event.eventId(), "APPLIED", applied.processedAt(), List.copyOf(warnings));
+    repository.applied(event);
+    return new EventResult(event.eventId(), "SUCCESS");
   }
 }

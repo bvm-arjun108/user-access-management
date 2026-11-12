@@ -2,7 +2,6 @@ package com.wu.pharos.uam.ingestion.repository;
 
 import com.wu.pharos.uam.common.error.ApiException;
 import com.wu.pharos.uam.common.jdbc.SqlResourceLoader;
-import com.wu.pharos.uam.ingestion.dto.EventResult.Warning;
 import com.wu.pharos.uam.ingestion.model.EmployeeEvent;
 import com.wu.pharos.uam.ingestion.service.EventValidator;
 import java.sql.ResultSet;
@@ -10,7 +9,6 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +31,7 @@ public class UamRepository {
     this.mapper = mapper;
   }
 
-  public record EventRow(UUID id, String status, Instant processedAt, boolean payloadMatches, List<Warning> warnings) {}
+  public record EventRow(UUID id, String status, Instant processedAt, boolean payloadMatches) {}
 
   private MapSqlParameterSource params(EmployeeEvent e) {
     return new MapSqlParameterSource()
@@ -62,13 +60,9 @@ public class UamRepository {
   }
 
   private EventRow row(ResultSet rs, int i) throws SQLException {
-    List<Warning> warnings = new ArrayList<>();
-    for (JsonNode w : mapper.readTree(rs.getString("warnings"))) {
-      warnings.add(new Warning(w.get("code").asString(), w.get("message").asString()));
-    }
     OffsetDateTime time = rs.getObject("processed_at", OffsetDateTime.class);
     return new EventRow(rs.getObject("event_id", UUID.class), rs.getString("processing_status"), time == null ? null : time.toInstant(),
-        rs.getBoolean("payload_matches"), List.copyOf(warnings));
+        rs.getBoolean("payload_matches"));
   }
 
   public void lockEmployee(String employee) {
@@ -124,7 +118,7 @@ public class UamRepository {
     return result.getFirst();
   }
 
-  public record RoleRow(long id, String mappingStatus) {}
+  public record RoleRow(long id) {}
 
   public RoleRow upsertRole(JsonNode r, EmployeeEvent e) {
     var p = new MapSqlParameterSource("application", e.user().get("account").get("application").asString())
@@ -137,8 +131,7 @@ public class UamRepository {
       .addValue("pharos", r.get("isPharosGroup").asBoolean())
       .addValue("requestable", r.get("isAvailableForRequest").asBoolean())
       .addValue("privileged", r.get("isPrivileged").asBoolean());
-    List<RoleRow> result =
-        jdbc.query(sql.load("role/upsert"), p, (rs, i) -> new RoleRow(rs.getLong("role_id"), rs.getString("permission_mapping_status")));
+    List<RoleRow> result = jdbc.query(sql.load("role/upsert"), p, (rs, i) -> new RoleRow(rs.getLong("role_id")));
     if (result.isEmpty()) {
       throw ApiException.conflict("ROLE_IDENTITY_CONFLICT", "Existing entitlement has a different roleName; review the role definition");
     }
@@ -183,8 +176,8 @@ public class UamRepository {
     jdbc.update(sql.load("assignment/terminate"), Map.of("employee", e.employeeId(), "environment", e.environment(), "event", e.eventId()));
   }
 
-  public void applied(EmployeeEvent e, List<Warning> warnings) {
-    jdbc.update(sql.load("event/apply"), Map.of("id", e.eventId(), "warnings", mapper.writeValueAsString(warnings)));
+  public void applied(EmployeeEvent e) {
+    jdbc.update(sql.load("event/apply"), Map.of("id", e.eventId()));
   }
 
   public void failed(EmployeeEvent e, String code, String message) {

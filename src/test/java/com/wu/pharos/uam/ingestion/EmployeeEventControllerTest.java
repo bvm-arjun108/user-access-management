@@ -7,8 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.wu.pharos.uam.ingestion.controller.EmployeeEventController;
 import com.wu.pharos.uam.ingestion.service.EmployeeEventService;
 import com.wu.pharos.uam.ingestion.dto.EventResult;
-import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +23,13 @@ class EmployeeEventControllerTest {
 
   @Test
   void acceptsRequestsWithoutAuthentication() throws Exception {
-    when(service.process(any())).thenReturn(new EventResult(UUID.randomUUID(), "APPLIED", Instant.now(), List.of()));
+    when(service.process(any())).thenReturn(new EventResult(UUID.randomUUID(), "SUCCESS"));
     mvc
       .perform(post("/api/v1/ipass/events").contentType("application/json").content("{}"))
       .andExpect(status().isOk())
-      .andExpect(jsonPath("$.processingStatus").value("APPLIED"));
+      .andExpect(jsonPath("$.status").value("SUCCESS"))
+      .andExpect(jsonPath("$.eventId").isNotEmpty())
+      .andExpect(jsonPath("$.*").value(org.hamcrest.Matchers.hasSize(2)));
   }
 
   @Test
