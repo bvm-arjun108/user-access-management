@@ -47,7 +47,7 @@ CREATE TABLE pharos_uam.employee (
     )
 );
 
-CREATE TABLE pharos_uam.account (
+CREATE TABLE pharos_uam.okta_account (
 account_id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     employee_id         TEXT NOT NULL REFERENCES pharos_uam.employee(employee_id) ON DELETE RESTRICT,
     application         TEXT NOT NULL CHECK (btrim(application) <> ''),
@@ -59,7 +59,7 @@ account_id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     CONSTRAINT uq_account_scope UNIQUE(account_id,application,environment)
 );
 
-CREATE TABLE pharos_uam.role (
+CREATE TABLE pharos_uam.ipass_role (
 role_id             UUID DEFAULT gen_random_uuid() CONSTRAINT pk_role PRIMARY KEY,
     application         TEXT NOT NULL CHECK (btrim(application) <> ''),
     environment         TEXT NOT NULL CHECK (environment IN ('Prod','UAT','Dev')),
@@ -78,8 +78,8 @@ role_id             UUID DEFAULT gen_random_uuid() CONSTRAINT pk_role PRIMARY KE
     CONSTRAINT ck_role_name_scope CHECK (starts_with(role_name,'APP_Pharos_' || environment || '_'))
 );
 
-CREATE TABLE pharos_uam.role_owner (
-role_id             UUID NOT NULL REFERENCES pharos_uam.role(role_id) ON DELETE RESTRICT,
+CREATE TABLE pharos_uam.ipass_role_owner (
+role_id             UUID NOT NULL REFERENCES pharos_uam.ipass_role(role_id) ON DELETE RESTRICT,
     owner_id            TEXT NOT NULL CHECK (btrim(owner_id) <> ''),
     first_name          TEXT NOT NULL CHECK (btrim(first_name) <> ''),
     last_name           TEXT NOT NULL CHECK (btrim(last_name) <> ''),
@@ -116,7 +116,7 @@ CREATE TABLE pharos_uam.ipass_event (
     )
 );
 
-CREATE TABLE pharos_uam.account_role (
+CREATE TABLE pharos_uam.account_role_assignment (
 assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     account_id          UUID NOT NULL,
     role_id             UUID NOT NULL,
@@ -124,19 +124,19 @@ assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     environment         TEXT NOT NULL,
     assigned_at         TIMESTAMPTZ NOT NULL,
     removed_at          TIMESTAMPTZ,
-    assigned_by_event_id    UUID NOT NULL REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
-    removed_by_event_id    UUID REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
+    assignment_event_id    UUID NOT NULL REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
+    removal_event_id    UUID REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     CONSTRAINT fk_account_role_account FOREIGN KEY(account_id,application,environment)
-        REFERENCES pharos_uam.account(account_id,application,environment) ON DELETE RESTRICT,
+        REFERENCES pharos_uam.okta_account(account_id,application,environment) ON DELETE RESTRICT,
     CONSTRAINT fk_account_role_role FOREIGN KEY(role_id,application,environment)
-        REFERENCES pharos_uam.role(role_id,application,environment) ON DELETE RESTRICT,
+        REFERENCES pharos_uam.ipass_role(role_id,application,environment) ON DELETE RESTRICT,
     CONSTRAINT ck_account_role_removal CHECK (
-        (removed_at IS NULL AND removed_by_event_id IS NULL) OR
-        (removed_at IS NOT NULL AND removed_by_event_id IS NOT NULL AND removed_at >= assigned_at)
+        (removed_at IS NULL AND removal_event_id IS NULL) OR
+        (removed_at IS NOT NULL AND removal_event_id IS NOT NULL AND removed_at >= assigned_at)
     )
 );
 
-CREATE UNIQUE INDEX uq_account_role_current ON pharos_uam.account_role(account_id,role_id) WHERE removed_at IS NULL;
+CREATE UNIQUE INDEX uq_account_role_current ON pharos_uam.account_role_assignment(account_id,role_id) WHERE removed_at IS NULL;
 
 COMMIT;

@@ -4,12 +4,12 @@ All columns and PostgreSQL types match the fresh-install DDL. PK = primary key; 
 
 ```mermaid
 erDiagram
-    EMPLOYEE ||--o{ ACCOUNT : has
-    ACCOUNT ||--o{ ACCOUNT_ROLE : receives
-    ROLE ||--o{ ACCOUNT_ROLE : assigned_as
-    ROLE ||--o{ ROLE_OWNER : owned_by
-    IPASS_EVENT ||--o{ ACCOUNT_ROLE : creates
-    IPASS_EVENT o|--o{ ACCOUNT_ROLE : removes
+    EMPLOYEE ||--o{ OKTA_ACCOUNT : has
+    OKTA_ACCOUNT ||--o{ ACCOUNT_ROLE_ASSIGNMENT : receives
+    IPASS_ROLE ||--o{ ACCOUNT_ROLE_ASSIGNMENT : assigned_as
+    IPASS_ROLE ||--o{ IPASS_ROLE_OWNER : owned_by
+    IPASS_EVENT ||--o{ ACCOUNT_ROLE_ASSIGNMENT : creates
+    IPASS_EVENT o|--o{ ACCOUNT_ROLE_ASSIGNMENT : removes
 
     EMPLOYEE {
         text employee_id PK "Required"
@@ -40,7 +40,7 @@ erDiagram
         timestamptz updated_at "Required"
     }
 
-    ACCOUNT {
+    OKTA_ACCOUNT {
         uuid account_id PK "Required"
         text employee_id FK "Required"
         text application "Required"
@@ -50,7 +50,7 @@ erDiagram
         timestamptz updated_at "Required"
     }
 
-    ROLE {
+    IPASS_ROLE {
         uuid role_id PK "Required"
         text application "Required"
         text environment "Required"
@@ -66,7 +66,7 @@ erDiagram
         timestamptz updated_at "Required"
     }
 
-    ROLE_OWNER {
+    IPASS_ROLE_OWNER {
         uuid role_id PK,FK "Required"
         text owner_id PK "Required"
         text first_name "Required"
@@ -92,7 +92,7 @@ erDiagram
         text error_message "Nullable"
     }
 
-    ACCOUNT_ROLE {
+    ACCOUNT_ROLE_ASSIGNMENT {
         uuid assignment_id PK "Required"
         uuid account_id FK "Required"
         uuid role_id FK "Required"
@@ -100,8 +100,8 @@ erDiagram
         text environment FK "Required"
         timestamptz assigned_at "Required"
         timestamptz removed_at "Nullable"
-        uuid assigned_by_event_id FK "Required"
-        uuid removed_by_event_id FK "Nullable"
+        uuid assignment_event_id FK "Required"
+        uuid removal_event_id FK "Nullable"
         timestamptz created_at "Required"
     }
 ```
@@ -122,8 +122,8 @@ All identifiers below are fictional. Internal keys are database-generated UUIDs;
 
 | Table | Internal key | Source identifier | Scope |
 | --- | --- | --- | --- |
-| account | account_id = b6d27ea0-f56a-4a7e-8df2-26a849b6c430 | okta_account_id = 00u8k3m5n7P2qRsTu0h7 | Okta / Prod |
-| role | role_id = 19c852d7-e483-49f8-93b6-63fe09fc1ea4 | entitlement_value = 00g8n4q2r6T9vWxYz0h7 | Okta / Prod |
-| role | role_id = 832ebfac-b653-4719-a124-e6f1026c58f9 | entitlement_value = 00g9p5s3u7V2xYaBc0h7 | Okta / Prod |
+| okta_account | account_id = b6d27ea0-f56a-4a7e-8df2-26a849b6c430 | okta_account_id = 00u8k3m5n7P2qRsTu0h7 | Okta / Prod |
+| ipass_role | role_id = 19c852d7-e483-49f8-93b6-63fe09fc1ea4 | entitlement_value = 00g8n4q2r6T9vWxYz0h7 | Okta / Prod |
+| ipass_role | role_id = 832ebfac-b653-4719-a124-e6f1026c58f9 | entitlement_value = 00g9p5s3u7V2xYaBc0h7 | Okta / Prod |
 
 The KYC role is named APP_Pharos_Prod_KYC_Analyst; the GSI role is APP_Pharos_Prod_GSI_Analyst. Assignment rows reference account_id b6d27ea0-f56a-4a7e-8df2-26a849b6c430 and role_id 19c852d7-e483-49f8-93b6-63fe09fc1ea4 or 832ebfac-b653-4719-a124-e6f1026c58f9. iPass sends the source identifiers, never these internal UUIDs. Source identifiers do not encode the employee, role name, or environment.
