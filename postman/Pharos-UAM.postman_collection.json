@@ -1090,5 +1090,24 @@
         }
       ]
     }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const correlationId = pm.response.headers.get(\"X-Correlation-ID\");",
+          "pm.test(\"Response includes a correlation UUID\", () => {",
+          "  pm.expect(correlationId).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);",
+          "});",
+          "if (pm.response.code >= 400) {",
+          "  pm.test(\"Error correlation ID matches response header\", () => {",
+          "    pm.expect(pm.response.json().correlationId).to.eql(correlationId);",
+          "  });",
+          "}"
+        ]
+      }
+    }
   ]
 }
