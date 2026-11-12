@@ -83,7 +83,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
                 ]
               }
             }
@@ -205,7 +205,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(2));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(2));"
                 ]
               }
             }
@@ -259,7 +259,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
                 ]
               }
             }
@@ -347,7 +347,31 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(0));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11b Verify removed role history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}?includeHistory=true"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const assignments = pm.response.json().accounts.flatMap(a => a.assignments);",
+                  "pm.test(\"Removed assignments are retained\", () => {",
+                  "  pm.expect(assignments.length).to.be.above(0);",
+                  "  pm.expect(assignments.every(a => a.assignmentStatus === \"REMOVED\" && a.removedAt !== null)).to.eql(true);",
+                  "});"
                 ]
               }
             }
@@ -401,7 +425,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"TERMINATED\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(0));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"TERMINATED\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(0));"
                 ]
               }
             }
@@ -489,7 +513,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
                 ]
               }
             }
@@ -675,7 +699,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
-                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
                 ]
               }
             }
@@ -729,7 +753,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json(); pm.test(\"Employment TERMINATED\",()=>pm.expect(b.employee.employment_status).to.eql(\"TERMINATED\"));",
-                  "pm.test(\"Current assignments 0\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(0));"
+                  "pm.test(\"Current assignments 0\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(0));"
                 ]
               }
             }
@@ -783,7 +807,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
-                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
                 ]
               }
             }
@@ -870,7 +894,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
-                  "pm.test(\"Current assignments 1\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(1));"
+                  "pm.test(\"Current assignments 1\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(1));"
                 ]
               }
             }
@@ -972,7 +996,7 @@
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json();",
                   "pm.test(\"Two accounts\",()=>pm.expect(b.accounts.length).to.eql(2));",
-                  "pm.test(\"Six current assignments\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(6));"
+                  "pm.test(\"Six current assignments\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(6));"
                 ]
               }
             }
@@ -1081,8 +1105,8 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json();",
-                  "pm.test(\"Three current assignments remain\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));",
-                  "pm.test(\"Second account retains all roles\",()=>pm.expect(b.accounts.find(a=>a.oktaAccountId.startsWith(\"00u-secondary-\")).assignments.filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                  "pm.test(\"Three current assignments remain\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(3));",
+                  "pm.test(\"Second account retains all roles\",()=>pm.expect(b.accounts.find(a=>a.oktaAccountId.startsWith(\"00u-secondary-\")).assignments.length).to.eql(3));"
                 ]
               }
             }
@@ -1105,6 +1129,25 @@
           "  pm.test(\"Error correlation ID matches response header\", () => {",
           "    pm.expect(pm.response.json().correlationId).to.eql(correlationId);",
           "  });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.request.method === \"GET\" && pm.response.code === 200) {",
+          "  const body = pm.response.json();",
+          "  if (Array.isArray(body.accounts) && !pm.request.url.toString().includes(\"includeHistory=true\")) {",
+          "    pm.test(\"Only current assignments are returned\", () => {",
+          "      body.accounts.flatMap(a => a.assignments).forEach(a => {",
+          "        pm.expect(a.assignmentStatus).to.eql(\"PROVISIONED\");",
+          "        pm.expect(a.removedAt).to.eql(null);",
+          "      });",
+          "    });",
+          "  }",
           "}"
         ]
       }

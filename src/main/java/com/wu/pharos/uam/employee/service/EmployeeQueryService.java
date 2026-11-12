@@ -18,8 +18,8 @@ public class EmployeeQueryService {
     this.environment = environment;
   }
 
-  public JsonNode employee(String id) {
-    return repository.employee(id, environment);
+  public JsonNode employee(String id, boolean includeHistory) {
+    return repository.employee(id, environment, includeHistory);
   }
 
   public JsonNode event(UUID id) {

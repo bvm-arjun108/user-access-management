@@ -185,8 +185,8 @@ public class UamRepository {
     jdbc.update(sql.load("event/fail"), Map.of("id", e.eventId(), "code", code, "message", message));
   }
 
-  public JsonNode employee(String employee, String environment) {
-    return read("read/employee", Map.of("employee", employee, "environment", environment));
+  public JsonNode employee(String employee, String environment, boolean includeHistory) {
+    return read("read/employee", Map.of("employee", employee, "environment", environment, "includeHistory", includeHistory));
   }
 
   public JsonNode event(UUID id, String environment) {

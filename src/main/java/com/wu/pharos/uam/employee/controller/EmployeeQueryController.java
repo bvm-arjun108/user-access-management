@@ -15,8 +15,8 @@ public class EmployeeQueryController implements EmployeeQueryApi {
   }
 
   @Override
-  public JsonNode employee(String id) {
-    return service.employee(id);
+  public JsonNode employee(String id, boolean includeHistory) {
+    return service.employee(id, includeHistory);
   }
 
   @Override

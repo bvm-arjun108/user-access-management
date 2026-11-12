@@ -149,6 +149,26 @@ class EmployeeLifecycleIT {
     ((ObjectNode) empty.get("user")).putArray("iPassRoles");
     assertThat(post(empty).status()).isEqualTo(200);
     assertThat(active()).isZero();
+    var read = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482")).GET().build(),
+        HttpResponse.BodyHandlers.ofString());
+    assertThat(read.statusCode()).isEqualTo(200);
+    JsonNode employee = mapper.readTree(read.body());
+    assertThat(employee.get("employee").get("employment_status").asString()).isEqualTo("ACTIVE");
+    assertThat(employee.get("accounts").size()).isEqualTo(1);
+    assertThat(employee.get("accounts").get(0).get("assignments").size()).isZero();
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment WHERE removed_at IS NOT NULL", Long.class))
+      .isEqualTo(3);
+    var history = http.send(HttpRequest
+          .newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482?includeHistory=true"))
+          .GET()
+          .build(), HttpResponse.BodyHandlers.ofString());
+    assertThat(history.statusCode()).isEqualTo(200);
+    JsonNode historicalAssignments = mapper.readTree(history.body()).get("accounts").get(0).get("assignments");
+    assertThat(historicalAssignments.size()).isEqualTo(3);
+    for (JsonNode assignment : historicalAssignments) {
+      assertThat(assignment.get("assignmentStatus").asString()).isEqualTo("REMOVED");
+      assertThat(assignment.get("removedAt").isNull()).isFalse();
+    }
     ObjectNode reassign = next("USER_UPDATED");
     reassign.put("eventEffectiveAt", "2026-08-12T12:00:00Z");
     ArrayNode roles = ((ObjectNode) reassign.get("user")).putArray("iPassRoles");
@@ -157,6 +177,19 @@ class EmployeeLifecycleIT {
     roles.add(role);
     assertThat(post(reassign).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(1);
+    var restored = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482")).GET().build(),
+        HttpResponse.BodyHandlers.ofString());
+    assertThat(mapper.readTree(restored.body()).get("accounts").get(0).get("assignments").size()).isEqualTo(1);
+    var all = http.send(HttpRequest
+          .newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482?includeHistory=true"))
+          .GET()
+          .build(), HttpResponse.BodyHandlers.ofString());
+    assertThat(mapper.readTree(all.body()).get("accounts").get(0).get("assignments").size()).isEqualTo(4);
+    var invalid = http.send(HttpRequest
+          .newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482?includeHistory=invalid"))
+          .GET()
+          .build(), HttpResponse.BodyHandlers.ofString());
+    assertThat(invalid.statusCode()).isEqualTo(400);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment", Long.class)).isEqualTo(4);
   }
 

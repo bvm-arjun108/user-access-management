@@ -87,3 +87,5 @@ Event status is RECEIVED, APPLIED or FAILED. Pharos populates error_code and err
 - Role and owner snapshots must contain current shared metadata.
 
 For column details, see the [full ER diagram](pharos-ingestion-full-erd.md) and [DDL](../ddl/01_create_schema.sql). For request examples, see the [scenario guide](scenarios.md).
+
+The employee GET returns current assignments only. After all roles are removed, the account remains with assignments: []; closed history remains in the database. Add ?includeHistory=true to return current and removed assignments together.

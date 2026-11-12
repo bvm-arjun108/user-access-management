@@ -8,6 +8,6 @@ SELECT jsonb_build_object('employee',to_jsonb(e),'accounts',COALESCE((
  ORDER BY o.owner_id) FROM pharos_uam.ipass_role_owner o WHERE o.role_id=r.role_id),'[]'::jsonb),
  'assignedAt',ar.assigned_at,'removedAt',ar.removed_at,
  'assignmentStatus',CASE WHEN ar.removed_at IS NULL THEN 'PROVISIONED' ELSE 'REMOVED' END) ORDER BY ar.assignment_id)
- FROM pharos_uam.okta_account_role_assignment ar JOIN pharos_uam.ipass_role r ON r.role_id=ar.role_id WHERE ar.account_id=a.account_id),'[]'::jsonb))
+ FROM pharos_uam.okta_account_role_assignment ar JOIN pharos_uam.ipass_role r ON r.role_id=ar.role_id WHERE ar.account_id=a.account_id AND (:includeHistory OR ar.removed_at IS NULL)),'[]'::jsonb))
  ORDER BY a.account_id) FROM pharos_uam.okta_account a WHERE a.employee_id=e.employee_id AND a.environment=:environment),'[]'::jsonb))::text AS data
 FROM pharos_uam.employee e WHERE e.employee_id=:employee

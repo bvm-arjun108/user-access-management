@@ -1252,7 +1252,7 @@
         "tags": [
           "Ingestion verification"
         ],
-        "summary": "Read employee details and assignment history",
+        "summary": "Read employee details and current assignments",
         "parameters": [
           {
             "name": "employeeId",
@@ -1261,11 +1261,21 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "includeHistory",
+            "in": "query",
+            "required": false,
+            "description": "Include removed role assignments alongside current assignments.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Employee profile and assignment history",
+            "description": "Employee profile and current assignments",
             "content": {
               "application/json": {
                 "schema": {
@@ -1287,7 +1297,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Returns current assignments by default. Set includeHistory=true to include removed assignments. Accounts remain present when their assignments array is empty."
       }
     },
     "/api/v1/ipass/events/{eventId}": {
@@ -1969,7 +1980,7 @@
                   "items": {
                     "type": "object"
                   },
-                  "description": "All assignment periods, current role metadata and owners. removedAt records when Pharos closed the assignment, including termination; it does not confirm iPass membership removal."
+                  "description": "Current assignments by default; includeHistory=true also returns removed assignments. assignmentStatus and removedAt distinguish current and removed assignments."
                 }
               }
             }
