@@ -20,14 +20,14 @@ import tools.jackson.databind.JsonNode;
 
 @Component
 public class EventValidator {
-  private static final Set<String> ENVELOPE = Set.of("eventId", "eventType", "occurredAt", "environment", "user");
+  private static final Set<String> ENVELOPE = Set.of("eventId", "eventType", "eventEffectiveAt", "environment", "user");
   private static final Set<String> PROFILE = Set.of("employeeId", "sourceSystem", "firstName", "middleName", "lastName", "email",
       "employmentStatus", "hireDate", "terminationDate", "employmentType", "employeeClass", "account", "superiorOrganization",
-      "organizationId", "country", "region", "site", "supervisoryOrganization", "lastSyncedAt", "manager", "iPassRoles");
+      "organizationId", "country", "region", "site", "supervisoryOrganization", "employeeLastSyncedAt", "manager", "iPassRoles");
   private static final Set<String> MANAGER = Set.of("employeeId", "firstName", "middleName", "lastName", "displayName", "email");
   private static final Set<String> ROLE = Set.of("entitlementValue", "entitlementType", "roleName", "displayName", "roleDescription",
       "isPharosGroup", "isAvailableForRequest", "isPrivileged", "owners", "assignedAt", "assignmentStatus");
-  private static final Set<String> ACCOUNT = Set.of("application", "accountId");
+  private static final Set<String> ACCOUNT = Set.of("application", "oktaAccountId");
   private static final Set<String> OWNER = Set.of("ownerId", "firstName", "lastName", "email");
   private final String environment;
   private final Clock clock;
@@ -58,16 +58,16 @@ public class EventValidator {
     if (!environment.equals(env)) {
       throw rule("Request environment does not match this deployment");
     }
-    Instant occurredAt = timestamp(root, "occurredAt");
-    if (occurredAt.isAfter(clock.instant().plusSeconds(60))) {
-      throw rule("occurredAt cannot be in the future");
+    Instant eventEffectiveAt = timestamp(root, "eventEffectiveAt");
+    if (eventEffectiveAt.isAfter(clock.instant().plusSeconds(60))) {
+      throw rule("eventEffectiveAt cannot be in the future");
     }
     JsonNode user = root.get("user");
     if (user == null || !user.isObject()) {
       throw invalid("user must be an object");
     }
     String employeeId = identifier(user, "employeeId");
-    return new EmployeeEvent(UUID.fromString(id), type, occurredAt, env, employeeId, user, root);
+    return new EmployeeEvent(UUID.fromString(id), type, eventEffectiveAt, env, employeeId, user, root);
   }
 
   public void validate(EmployeeEvent event) {
@@ -101,10 +101,10 @@ public class EventValidator {
     nullableText(user, "middleName");
     email(user, "email");
     LocalDate hire = date(user, "hireDate");
-    if (hire.isAfter(event.occurredAt().atOffset(java.time.ZoneOffset.UTC).toLocalDate())) {
+    if (hire.isAfter(event.eventEffectiveAt().atOffset(java.time.ZoneOffset.UTC).toLocalDate())) {
       throw rule("hireDate cannot follow the effective event date");
     }
-    timestamp(user, "lastSyncedAt");
+    timestamp(user, "employeeLastSyncedAt");
     JsonNode manager = user.get("manager");
     fields(manager, MANAGER, "manager");
     for (String f : MANAGER) {
@@ -119,7 +119,7 @@ public class EventValidator {
     JsonNode account = user.get("account");
     fields(account, ACCOUNT, "account");
     identifier(account, "application");
-    identifier(account, "accountId");
+    identifier(account, "oktaAccountId");
     JsonNode roles = user.get("iPassRoles");
     if (!roles.isArray()) {
       throw invalid("iPassRoles must be an array; use [] to remove all roles");
@@ -169,8 +169,8 @@ public class EventValidator {
       if (!"PROVISIONED".equals(text(role, "assignmentStatus"))) {
         throw rule("Only current PROVISIONED roles belong in the snapshot");
       }
-      if (timestamp(role, "assignedAt").isAfter(event.occurredAt())) {
-        throw rule("assignedAt cannot follow occurredAt");
+      if (timestamp(role, "assignedAt").isAfter(event.eventEffectiveAt())) {
+        throw rule("assignedAt cannot follow eventEffectiveAt");
       }
     }
   }

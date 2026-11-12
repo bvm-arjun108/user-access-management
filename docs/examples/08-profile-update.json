@@ -1,7 +1,7 @@
 {
   "eventId": "165e058c-727f-4a18-a6a8-03cc6ba7ffd5",
   "eventType": "USER_UPDATED",
-  "occurredAt": "2026-08-05T12:00:00Z",
+  "eventEffectiveAt": "2026-08-05T12:00:00Z",
   "environment": "Prod",
   "user": {
     "employeeId": "WU100482",
@@ -20,7 +20,7 @@
     "region": "North America",
     "site": "New York",
     "supervisoryOrganization": "Financial Crime Compliance",
-    "lastSyncedAt": "2026-08-05T12:00:00Z",
+    "employeeLastSyncedAt": "2026-08-05T12:00:00Z",
     "manager": {
       "employeeId": "WU100210",
       "firstName": "Maya",
@@ -94,7 +94,7 @@
     "employeeClass": "Employee",
     "account": {
       "application": "Okta",
-      "accountId": "00u8k3m5n7P2qRsTu0h7"
+      "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
     }
   }
 }

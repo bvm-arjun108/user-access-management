@@ -1,5 +1,5 @@
 SELECT jsonb_build_object('employee',to_jsonb(e),'accounts',COALESCE((
- SELECT jsonb_agg(jsonb_build_object('accountId',a.external_account_id,'application',a.application,'environment',a.environment,
+ SELECT jsonb_agg(jsonb_build_object('oktaAccountId',a.okta_account_id,'application',a.application,'environment',a.environment,
  'assignments',COALESCE((
  SELECT jsonb_agg(jsonb_build_object('assignmentId',ar.assignment_id,'entitlementValue',r.entitlement_value,
  'entitlementType',r.entitlement_type,'roleName',r.role_name,'displayName',r.display_name,'roleDescription',r.role_description,

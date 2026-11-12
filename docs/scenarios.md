@@ -22,7 +22,7 @@ Account ID may differ across environments. Owner identity is separate from the r
 | Access after all roles were removed | USER_UPDATED | Create new assignment periods; keep closed history | [09](examples/09-access-after-last-role-removal.json) |
 | VNDLY contractor | USER_PROVISIONED | Same account/assignment model | [10](examples/10-contractor-provisioning.json) |
 | Identical retry | Same UUID and unchanged payload | Return SUCCESS; no repeated changes | [11](examples/11-identical-retry.json) |
-| Second account | USER_UPDATED with another accountId | Add/update that account; leave first account's roles intact | [12](examples/12-second-account.json) |
+| Second account | USER_UPDATED with another oktaAccountId | Add/update that account; leave first account's roles intact | [12](examples/12-second-account.json) |
 | Owner list changes | USER_UPDATED with complete roles and current owners | Update shared owners; do not change continuing assignment times | [13](examples/13-role-owners-update.json) |
 
 ## Processing

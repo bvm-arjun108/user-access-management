@@ -39,10 +39,10 @@ public class UamRepository {
       .addValue("type", e.eventType().name())
       .addValue("employee", e.employeeId())
       .addValue("environment", e.environment())
-      .addValue("occurred", OffsetDateTime.ofInstant(e.occurredAt(), java.time.ZoneOffset.UTC))
+      .addValue("occurred", OffsetDateTime.ofInstant(e.eventEffectiveAt(), java.time.ZoneOffset.UTC))
       .addValue("payload", e.payload().toString())
       .addValue("application", optionalAccountField(e, "application"))
-      .addValue("externalAccount", optionalAccountField(e, "accountId"));
+      .addValue("oktaAccount", optionalAccountField(e, "oktaAccountId"));
   }
 
   private String optionalAccountField(EmployeeEvent e, String field) {
@@ -90,7 +90,7 @@ public class UamRepository {
     }
     p.put("hire_date", EventValidator.date(u, "hireDate"));
     p.put("termination_date", null);
-    p.put("source_last_synced_at", OffsetDateTime.ofInstant(EventValidator.timestamp(u, "lastSyncedAt"), java.time.ZoneOffset.UTC));
+    p.put("employee_last_synced_at", OffsetDateTime.ofInstant(EventValidator.timestamp(u, "employeeLastSyncedAt"), java.time.ZoneOffset.UTC));
     JsonNode m = u.get("manager");
     String[][] manager = {{"employeeId", "manager_employee_id"}, {"firstName", "manager_first_name"},
         {"middleName", "manager_middle_name"}, {"lastName", "manager_last_name"},
@@ -111,7 +111,8 @@ public class UamRepository {
   public UUID saveAccount(EmployeeEvent e) {
     JsonNode a = e.user().get("account");
     List<UUID> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "environment", e.environment(),
-        "application", a.get("application").asString(), "external", a.get("accountId").asString()), (rs, i) -> rs.getObject(1, UUID.class));
+        "application", a.get("application").asString(), "external", a.get("oktaAccountId").asString()), (rs, i) -> rs.getObject(1,
+        UUID.class));
     if (result.isEmpty()) {
       throw ApiException.conflict("ACCOUNT_IDENTITY_CONFLICT", "Account is already linked to a different employee");
     }

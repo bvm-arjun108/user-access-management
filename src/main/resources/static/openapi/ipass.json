@@ -3,7 +3,7 @@
   "info": {
     "title": "iPass \u2192 Pharos | Employee Access API",
     "version": "2.0.0",
-    "description": "Employee-centric ingestion from iPass to Pharos. No authentication or automatic database setup is configured.\n\n| Event | Required data | Result |\n| --- | --- | --- |\n| USER_PROVISIONED | Full employee, account and approved iPassRoles | Add access or explicitly restore a terminated employee. |\n| USER_UPDATED | Full employee, account and complete current iPassRoles | Update profile and replace assignments for that account only. |\n| USER_TERMINATED | employeeId and TERMINATED status | Disable employment and close all account assignments in this deployment. |\n\nAccount identity is application + environment + accountId. Role identity is application + environment + entitlementValue. Internal database-generated UUID keys are never sent by iPass.\n\nNew event: new UUID. Identical retry: same UUID and unchanged payload. No eventVersion; iPass must preserve employee event order. Employee identity must stay stable across source systems and rehire.\n\nCompose initializes the database from ddl/01_create_schema.sql. After schema edits, recreate the development volume with docker compose down -v followed by docker compose up -d. Example IDs and data are fictional."
+    "description": "Employee-centric ingestion from iPass to Pharos. No authentication or automatic database setup is configured.\n\n| Event | Required data | Result |\n| --- | --- | --- |\n| USER_PROVISIONED | Full employee, account and approved iPassRoles | Add access or explicitly restore a terminated employee. |\n| USER_UPDATED | Full employee, account and complete current iPassRoles | Update profile and replace assignments for that account only. |\n| USER_TERMINATED | employeeId and TERMINATED status | Disable employment and close all account assignments in this deployment. |\n\nAccount identity is application + environment + oktaAccountId. Role identity is application + environment + entitlementValue. Internal database-generated UUID keys are never sent by iPass.\n\nNew event: new UUID. Identical retry: same UUID and unchanged payload. No eventVersion; iPass must preserve employee event order. Employee identity must stay stable across source systems and rehire.\n\nCompose initializes the database from ddl/01_create_schema.sql. After schema edits, recreate the development volume with docker compose down -v followed by docker compose up -d. Example IDs and data are fictional."
   },
   "servers": [
     {
@@ -39,7 +39,7 @@
                   "value": {
                     "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
                     "eventType": "USER_PROVISIONED",
-                    "occurredAt": "2026-07-11T14:00:00Z",
+                    "eventEffectiveAt": "2026-07-11T14:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -58,7 +58,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-07-11T14:00:00Z",
+                      "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -132,7 +132,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -142,7 +142,7 @@
                   "value": {
                     "eventId": "c3809b3c-45a2-4df9-adaf-b00a507f08bd",
                     "eventType": "USER_UPDATED",
-                    "occurredAt": "2026-07-17T10:00:00Z",
+                    "eventEffectiveAt": "2026-07-17T10:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -161,7 +161,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-07-17T10:00:00Z",
+                      "employeeLastSyncedAt": "2026-07-17T10:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -215,7 +215,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -225,7 +225,7 @@
                   "value": {
                     "eventId": "8368fa3b-d25f-46f8-aab1-6d505b89324c",
                     "eventType": "USER_UPDATED",
-                    "occurredAt": "2026-07-30T11:00:00Z",
+                    "eventEffectiveAt": "2026-07-30T11:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -244,7 +244,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-07-30T11:00:00Z",
+                      "employeeLastSyncedAt": "2026-07-30T11:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -318,7 +318,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -328,7 +328,7 @@
                   "value": {
                     "eventId": "05e09592-7f11-4251-b523-91ac52a98364",
                     "eventType": "USER_TERMINATED",
-                    "occurredAt": "2026-08-31T17:00:00Z",
+                    "eventEffectiveAt": "2026-08-31T17:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -342,7 +342,7 @@
                   "value": {
                     "eventId": "e971664d-a845-4ef1-9bae-b1b4a64da2e7",
                     "eventType": "USER_PROVISIONED",
-                    "occurredAt": "2026-09-02T09:00:00Z",
+                    "eventEffectiveAt": "2026-09-02T09:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -361,7 +361,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-09-02T09:00:00Z",
+                      "employeeLastSyncedAt": "2026-09-02T09:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -435,7 +435,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -445,7 +445,7 @@
                   "value": {
                     "eventId": "3890f259-97c7-4b0d-9ac2-eabe3139b4a7",
                     "eventType": "USER_PROVISIONED",
-                    "occurredAt": "2026-09-02T09:00:00Z",
+                    "eventEffectiveAt": "2026-09-02T09:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -464,7 +464,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-09-02T09:00:00Z",
+                      "employeeLastSyncedAt": "2026-09-02T09:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -498,7 +498,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -508,7 +508,7 @@
                   "value": {
                     "eventId": "246e1b5c-a706-4794-bcd6-4a6c27ccb82d",
                     "eventType": "USER_UPDATED",
-                    "occurredAt": "2026-08-10T12:00:00Z",
+                    "eventEffectiveAt": "2026-08-10T12:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -527,7 +527,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-08-10T12:00:00Z",
+                      "employeeLastSyncedAt": "2026-08-10T12:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -540,7 +540,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -550,7 +550,7 @@
                   "value": {
                     "eventId": "165e058c-727f-4a18-a6a8-03cc6ba7ffd5",
                     "eventType": "USER_UPDATED",
-                    "occurredAt": "2026-08-05T12:00:00Z",
+                    "eventEffectiveAt": "2026-08-05T12:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -569,7 +569,7 @@
                       "region": "North America",
                       "site": "New York",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-08-05T12:00:00Z",
+                      "employeeLastSyncedAt": "2026-08-05T12:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -643,7 +643,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -653,7 +653,7 @@
                   "value": {
                     "eventId": "c4c6e055-cc40-4cae-a659-b8c445939af1",
                     "eventType": "USER_UPDATED",
-                    "occurredAt": "2026-08-12T12:00:00Z",
+                    "eventEffectiveAt": "2026-08-12T12:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -672,7 +672,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-08-12T12:00:00Z",
+                      "employeeLastSyncedAt": "2026-08-12T12:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -706,7 +706,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -716,7 +716,7 @@
                   "value": {
                     "eventId": "426c42d0-a7c5-4f46-b3cb-9cc000dc93c8",
                     "eventType": "USER_PROVISIONED",
-                    "occurredAt": "2026-07-11T14:00:00Z",
+                    "eventEffectiveAt": "2026-07-11T14:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -735,7 +735,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-07-11T14:00:00Z",
+                      "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -809,7 +809,7 @@
                       "employeeClass": "Contractor",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -819,7 +819,7 @@
                   "value": {
                     "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
                     "eventType": "USER_PROVISIONED",
-                    "occurredAt": "2026-07-11T14:00:00Z",
+                    "eventEffectiveAt": "2026-07-11T14:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -838,7 +838,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-07-11T14:00:00Z",
+                      "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -912,7 +912,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -922,7 +922,7 @@
                   "value": {
                     "eventId": "79351adf-76c9-4f90-9070-b14e28ca8874",
                     "eventType": "USER_UPDATED",
-                    "occurredAt": "2026-07-30T11:00:00Z",
+                    "eventEffectiveAt": "2026-07-30T11:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -941,7 +941,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-07-30T11:00:00Z",
+                      "employeeLastSyncedAt": "2026-07-30T11:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -1015,7 +1015,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u9j4n6p8Q3rStUv0h7"
+                        "oktaAccountId": "00u9j4n6p8Q3rStUv0h7"
                       }
                     }
                   }
@@ -1025,7 +1025,7 @@
                   "value": {
                     "eventId": "a9c22b4b-b706-4012-aea1-13b8b36e4cce",
                     "eventType": "USER_UPDATED",
-                    "occurredAt": "2026-07-30T11:00:00Z",
+                    "eventEffectiveAt": "2026-07-30T11:00:00Z",
                     "environment": "Prod",
                     "user": {
                       "employeeId": "WU100482",
@@ -1044,7 +1044,7 @@
                       "region": "North America",
                       "site": "Denver",
                       "supervisoryOrganization": "Financial Crime Compliance",
-                      "lastSyncedAt": "2026-07-30T11:00:00Z",
+                      "employeeLastSyncedAt": "2026-07-30T11:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
                         "firstName": "Maya",
@@ -1118,7 +1118,7 @@
                       "employeeClass": "Employee",
                       "account": {
                         "application": "Okta",
-                        "accountId": "00u8k3m5n7P2qRsTu0h7"
+                        "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
                       }
                     }
                   }
@@ -1348,7 +1348,7 @@
         "required": [
           "eventId",
           "eventType",
-          "occurredAt",
+          "eventEffectiveAt",
           "environment",
           "user"
         ],
@@ -1368,7 +1368,7 @@
             ],
             "description": "Adds an employee or restores approved access. Requires ACTIVE employment and at least one role."
           },
-          "occurredAt": {
+          "eventEffectiveAt": {
             "type": "string",
             "format": "date-time",
             "description": "Change timestamp with timezone (RFC 3339)."
@@ -1402,7 +1402,7 @@
               "region",
               "site",
               "supervisoryOrganization",
-              "lastSyncedAt",
+              "employeeLastSyncedAt",
               "manager",
               "iPassRoles",
               "account",
@@ -1487,7 +1487,7 @@
                 "type": "string",
                 "description": "Employee supervisory organization supplied by the source system."
               },
-              "lastSyncedAt": {
+              "employeeLastSyncedAt": {
                 "type": "string",
                 "format": "date-time",
                 "description": "When iPass last synchronized the employee details from Workday or VNDLY."
@@ -1562,7 +1562,7 @@
         "required": [
           "eventId",
           "eventType",
-          "occurredAt",
+          "eventEffectiveAt",
           "environment",
           "user"
         ],
@@ -1582,7 +1582,7 @@
             ],
             "description": "Updates an active employee. Send every remaining role; an empty list removes all roles in the environment."
           },
-          "occurredAt": {
+          "eventEffectiveAt": {
             "type": "string",
             "format": "date-time",
             "description": "Change timestamp with timezone (RFC 3339)."
@@ -1616,7 +1616,7 @@
               "region",
               "site",
               "supervisoryOrganization",
-              "lastSyncedAt",
+              "employeeLastSyncedAt",
               "manager",
               "iPassRoles",
               "account",
@@ -1701,7 +1701,7 @@
                 "type": "string",
                 "description": "Employee supervisory organization supplied by the source system."
               },
-              "lastSyncedAt": {
+              "employeeLastSyncedAt": {
                 "type": "string",
                 "format": "date-time",
                 "description": "When iPass last synchronized the employee details from Workday or VNDLY."
@@ -1775,7 +1775,7 @@
         "required": [
           "eventId",
           "eventType",
-          "occurredAt",
+          "eventEffectiveAt",
           "environment",
           "user"
         ],
@@ -1795,7 +1795,7 @@
             ],
             "description": "Disables employee access in the environment. Keeps employee and access history."
           },
-          "occurredAt": {
+          "eventEffectiveAt": {
             "type": "string",
             "format": "date-time",
             "description": "Change timestamp with timezone (RFC 3339)."
@@ -1874,7 +1874,7 @@
               "supervisoryOrganization": {
                 "description": "Optional on termination. Not validated or used to update the employee profile."
               },
-              "lastSyncedAt": {
+              "employeeLastSyncedAt": {
                 "description": "Optional on termination. Not validated or used to update the employee profile."
               },
               "manager": {
@@ -1977,7 +1977,7 @@
             "items": {
               "type": "object",
               "properties": {
-                "accountId": {
+                "oktaAccountId": {
                   "type": "string"
                 },
                 "application": {
@@ -2003,7 +2003,7 @@
         "additionalProperties": false,
         "required": [
           "application",
-          "accountId"
+          "oktaAccountId"
         ],
         "properties": {
           "application": {
@@ -2011,7 +2011,7 @@
             "description": "Account application, for example Okta.",
             "maxLength": 128
           },
-          "accountId": {
+          "oktaAccountId": {
             "type": "string",
             "description": "Opaque source account ID. May differ across environments.",
             "maxLength": 128

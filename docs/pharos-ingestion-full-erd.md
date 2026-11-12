@@ -35,7 +35,7 @@ erDiagram
         text manager_last_name "Required when ACTIVE"
         text manager_display_name "Required when ACTIVE"
         text manager_email "Required when ACTIVE"
-        timestamptz source_last_synced_at "Required when ACTIVE"
+        timestamptz employee_last_synced_at "Required when ACTIVE"
         timestamptz created_at "Required"
         timestamptz updated_at "Required"
     }
@@ -45,7 +45,7 @@ erDiagram
         text employee_id FK "Required"
         text application "Required"
         text environment "Required"
-        text external_account_id "Required"
+        text okta_account_id "Required"
         timestamptz created_at "Required"
         timestamptz updated_at "Required"
     }
@@ -82,8 +82,8 @@ erDiagram
         text employee_id "Required"
         text environment "Required"
         text application "Nullable"
-        text external_account_id "Nullable"
-        timestamptz occurred_at "Required"
+        text okta_account_id "Nullable"
+        timestamptz event_effective_at "Required"
         timestamptz received_at "Required"
         timestamptz processed_at "Nullable"
         text processing_status "Required"
@@ -100,15 +100,15 @@ erDiagram
         text environment FK "Required"
         timestamptz assigned_at "Required"
         timestamptz removed_at "Nullable"
-        uuid created_event_id FK "Required"
-        uuid removed_event_id FK "Nullable"
+        uuid assigned_by_event_id FK "Required"
+        uuid removed_by_event_id FK "Nullable"
         timestamptz created_at "Required"
     }
 ```
 
 ## Keys and scope
 
-- Account source key: application + environment + external_account_id.
+- Account source key: application + environment + okta_account_id.
 - Role source key: application + environment + entitlement_value.
 - Owner key: role_id + owner_id. Owners need not have employee accounts.
 - Current assignment: removed_at IS NULL; one per account/role. Role and account must match application/environment through composite foreign keys.
@@ -122,7 +122,7 @@ All identifiers below are fictional. Internal keys are database-generated UUIDs;
 
 | Table | Internal key | Source identifier | Scope |
 | --- | --- | --- | --- |
-| account | account_id = b6d27ea0-f56a-4a7e-8df2-26a849b6c430 | external_account_id = 00u8k3m5n7P2qRsTu0h7 | Okta / Prod |
+| account | account_id = b6d27ea0-f56a-4a7e-8df2-26a849b6c430 | okta_account_id = 00u8k3m5n7P2qRsTu0h7 | Okta / Prod |
 | role | role_id = 19c852d7-e483-49f8-93b6-63fe09fc1ea4 | entitlement_value = 00g8n4q2r6T9vWxYz0h7 | Okta / Prod |
 | role | role_id = 832ebfac-b653-4719-a124-e6f1026c58f9 | entitlement_value = 00g9p5s3u7V2xYaBc0h7 | Okta / Prod |
 

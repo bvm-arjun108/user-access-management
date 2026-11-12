@@ -66,7 +66,7 @@ class EmployeeLifecycleIT {
 
   private ObjectNode termination() {
     ObjectNode p = next("USER_TERMINATED");
-    p.put("occurredAt", "2026-08-31T17:00:00Z");
+    p.put("eventEffectiveAt", "2026-08-31T17:00:00Z");
     p.set("user",
         mapper.createObjectNode().put("employeeId", "WU100482").put("employmentStatus", "TERMINATED").put("terminationDate", "2026-08-31"));
     return p;
@@ -99,7 +99,7 @@ class EmployeeLifecycleIT {
     role.put("roleDescription", "GDD Analyst");
     role.put("assignedAt", "2026-07-30T11:00:00Z");
     roles.add(role);
-    add.put("occurredAt", "2026-07-30T11:00:00Z");
+    add.put("eventEffectiveAt", "2026-07-30T11:00:00Z");
     assertThat(post(add).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(3);
     assertThat(post(termination()).status()).isEqualTo(200);
@@ -150,7 +150,7 @@ class EmployeeLifecycleIT {
     assertThat(post(empty).status()).isEqualTo(200);
     assertThat(active()).isZero();
     ObjectNode reassign = next("USER_UPDATED");
-    reassign.put("occurredAt", "2026-08-12T12:00:00Z");
+    reassign.put("eventEffectiveAt", "2026-08-12T12:00:00Z");
     ArrayNode roles = ((ObjectNode) reassign.get("user")).putArray("iPassRoles");
     ObjectNode role = (ObjectNode) initial.get("user").get("iPassRoles").get(0).deepCopy();
     role.put("assignedAt", "2026-08-12T12:00:00Z");
@@ -165,7 +165,7 @@ class EmployeeLifecycleIT {
     assertThat(post(termination()).status()).isEqualTo(200);
     assertThat(post(next("USER_UPDATED")).status()).isEqualTo(409);
     ObjectNode restore = next("USER_PROVISIONED");
-    restore.put("occurredAt", "2026-09-02T09:00:00Z");
+    restore.put("eventEffectiveAt", "2026-09-02T09:00:00Z");
     for (JsonNode r : restore.get("user").get("iPassRoles")) {
       ((ObjectNode) r).put("assignedAt", "2026-09-02T09:00:00Z");
     }
@@ -221,9 +221,9 @@ class EmployeeLifecycleIT {
   @Test
   void accountAndRoleEnvironmentAreEnforcedByDatabase() throws Exception {
     post(initial);
-    jdbc.update("UPDATE pharos_uam.account_role SET removed_at=now(),removed_event_id=created_event_id");
+    jdbc.update("UPDATE pharos_uam.account_role SET removed_at=now(),removed_by_event_id=assigned_by_event_id");
     assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.account_role(account_id,role_id,application,environment,assigned_at,"
-        + "created_event_id) SELECT a.account_id,r.role_id,'Okta','UAT',now(),? FROM pharos_uam.account a CROSS JOIN pharos_uam.role "
+        + "assigned_by_event_id) SELECT a.account_id,r.role_id,'Okta','UAT',now(),? FROM pharos_uam.account a CROSS JOIN pharos_uam.role "
         + "r LIMIT 1", UUID.fromString(initial.get("eventId").asString())))
       .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
       .hasMessageContaining("fk_account_role_account");
@@ -233,7 +233,7 @@ class EmployeeLifecycleIT {
   void updatingOneAccountDoesNotRemoveAnotherAccountsRoles() throws Exception {
     post(initial);
     ObjectNode second = next("USER_UPDATED");
-    ((ObjectNode) second.get("user").get("account")).put("accountId", "00u-second");
+    ((ObjectNode) second.get("user").get("account")).put("oktaAccountId", "00u-second");
     assertThat(post(second).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(6);
     ObjectNode empty = next("USER_UPDATED");
@@ -292,19 +292,19 @@ class EmployeeLifecycleIT {
   void terminationClosesAllAccountsAndRestorationOnlyRestoresSuppliedAccount() throws Exception {
     post(initial);
     ObjectNode second = next("USER_UPDATED");
-    ((ObjectNode) second.get("user").get("account")).put("accountId", "00u-second");
+    ((ObjectNode) second.get("user").get("account")).put("oktaAccountId", "00u-second");
     post(second);
     assertThat(post(termination()).status()).isEqualTo(200);
     assertThat(active()).isZero();
     ObjectNode restore = next("USER_PROVISIONED");
-    restore.put("occurredAt", "2026-09-02T09:00:00Z");
+    restore.put("eventEffectiveAt", "2026-09-02T09:00:00Z");
     for (JsonNode role : restore.get("user").get("iPassRoles")) {
       ((ObjectNode) role).put("assignedAt", "2026-09-02T09:00:00Z");
     }
     assertThat(post(restore).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(3);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.account_role ar JOIN pharos_uam.account a USING(account_id) WHERE a."
-        + "external_account_id='00u-second' AND ar.removed_at IS NULL", Long.class))
+        + "okta_account_id='00u-second' AND ar.removed_at IS NULL", Long.class))
       .isZero();
   }
 

@@ -27,7 +27,7 @@ CREATE TABLE pharos_uam.employee (
     manager_last_name           TEXT CHECK (btrim(manager_last_name) <> ''),
     manager_display_name        TEXT CHECK (btrim(manager_display_name) <> ''),
     manager_email               TEXT CHECK (btrim(manager_email) <> ''),
-    source_last_synced_at       TIMESTAMPTZ,
+    employee_last_synced_at       TIMESTAMPTZ,
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     CONSTRAINT ck_employee_dates CHECK (
@@ -40,7 +40,7 @@ CREATE TABLE pharos_uam.employee (
             AND hire_date IS NOT NULL AND employment_type IS NOT NULL AND employee_class IS NOT NULL
             AND superior_organization IS NOT NULL AND organization_id IS NOT NULL
             AND country IS NOT NULL AND region IS NOT NULL AND site IS NOT NULL
-            AND supervisory_organization IS NOT NULL AND source_last_synced_at IS NOT NULL
+            AND supervisory_organization IS NOT NULL AND employee_last_synced_at IS NOT NULL
             AND manager_employee_id IS NOT NULL AND manager_first_name IS NOT NULL
             AND manager_last_name IS NOT NULL AND manager_email IS NOT NULL AND manager_display_name IS NOT NULL
         )
@@ -52,10 +52,10 @@ account_id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     employee_id         TEXT NOT NULL REFERENCES pharos_uam.employee(employee_id) ON DELETE RESTRICT,
     application         TEXT NOT NULL CHECK (btrim(application) <> ''),
     environment         TEXT NOT NULL CHECK (environment IN ('Prod','UAT','Dev')),
-    external_account_id TEXT NOT NULL CHECK (btrim(external_account_id) <> ''),
+    okta_account_id TEXT NOT NULL CHECK (btrim(okta_account_id) <> ''),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT uq_account_external UNIQUE(application,environment,external_account_id),
+    CONSTRAINT uq_account_okta UNIQUE(application,environment,okta_account_id),
     CONSTRAINT uq_account_scope UNIQUE(account_id,application,environment)
 );
 
@@ -97,8 +97,8 @@ CREATE TABLE pharos_uam.ipass_event (
     employee_id         TEXT NOT NULL CHECK (btrim(employee_id) <> ''),
     environment         TEXT NOT NULL CHECK (environment IN ('Prod', 'UAT', 'Dev')),
     application         TEXT,
-    external_account_id TEXT,
-    occurred_at         TIMESTAMPTZ NOT NULL,
+    okta_account_id TEXT,
+    event_effective_at         TIMESTAMPTZ NOT NULL,
     received_at         TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     processed_at        TIMESTAMPTZ,
     processing_status   TEXT NOT NULL DEFAULT 'RECEIVED'
@@ -124,16 +124,16 @@ assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     environment         TEXT NOT NULL,
     assigned_at         TIMESTAMPTZ NOT NULL,
     removed_at          TIMESTAMPTZ,
-    created_event_id    UUID NOT NULL REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
-    removed_event_id    UUID REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
+    assigned_by_event_id    UUID NOT NULL REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
+    removed_by_event_id    UUID REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     CONSTRAINT fk_account_role_account FOREIGN KEY(account_id,application,environment)
         REFERENCES pharos_uam.account(account_id,application,environment) ON DELETE RESTRICT,
     CONSTRAINT fk_account_role_role FOREIGN KEY(role_id,application,environment)
         REFERENCES pharos_uam.role(role_id,application,environment) ON DELETE RESTRICT,
     CONSTRAINT ck_account_role_removal CHECK (
-        (removed_at IS NULL AND removed_event_id IS NULL) OR
-        (removed_at IS NOT NULL AND removed_event_id IS NOT NULL AND removed_at >= assigned_at)
+        (removed_at IS NULL AND removed_by_event_id IS NULL) OR
+        (removed_at IS NOT NULL AND removed_by_event_id IS NOT NULL AND removed_at >= assigned_at)
     )
 );
 
