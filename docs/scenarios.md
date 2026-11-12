@@ -2,7 +2,7 @@
 
 ## Payload rules
 
-One event contains one employee and one account in an environment. USER_PROVISIONED and USER_UPDATED include all profile fields, manager.displayName, employeeClass, account and the complete iPassRoles list. The role source key is entitlementValue, not roleId. Each role includes entitlementType, roleName, displayName, description, the three boolean flags, owners, assignedAt and PROVISIONED status.
+One event contains one employee and one account in an environment. USER_PROVISIONED and USER_UPDATED include all profile fields, employeeClass, account and the complete iPassRoles list. The role source key is entitlementValue, not roleId. Each role includes entitlementType, roleName, displayName, description, the three boolean flags, owners, assignedAt and PROVISIONED status.
 
 Account ID may differ across environments. Owner identity is separate from the receiving employee. Every owner has ownerId, firstName, lastName and email. [] explicitly clears the shared owner list; missing/null is invalid. Original employee and manager fields remain included.
 

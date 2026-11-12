@@ -360,7 +360,7 @@ class EmployeeLifecycleIT {
     assertThat(response.body()).doesNotContain("permissionMappingStatus", "authorizationEligible", "permission_mapping_status");
     assertThat(account.get("assignments").get(0).get("owners").size()).isEqualTo(1);
     assertThat(body.get("employee").get("employee_class").asString()).isEqualTo("Employee");
-    assertThat(body.get("employee").get("manager_display_name").asString()).isEqualTo("Maya Patel");
+    assertThat(body.get("employee").has("manager_display_name")).isFalse();
   }
 
   @Test

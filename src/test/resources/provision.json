@@ -26,8 +26,7 @@
       "firstName": "Maya",
       "middleName": "R",
       "lastName": "Patel",
-      "email": "maya.patel@example.com",
-      "displayName": "Maya Patel"
+      "email": "maya.patel@example.com"
     },
     "iPassRoles": [
       {

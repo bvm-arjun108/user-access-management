@@ -64,8 +64,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -167,8 +166,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -250,8 +248,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -367,8 +364,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -470,8 +466,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -533,8 +528,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [],
                       "employeeClass": "Employee",
@@ -575,8 +569,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -678,8 +671,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -741,8 +733,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -844,8 +835,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -947,8 +937,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -1050,8 +1039,7 @@
                         "firstName": "Maya",
                         "middleName": "R",
                         "lastName": "Patel",
-                        "email": "maya.patel@example.com",
-                        "displayName": "Maya Patel"
+                        "email": "maya.patel@example.com"
                       },
                       "iPassRoles": [
                         {
@@ -1500,8 +1488,7 @@
                   "firstName",
                   "middleName",
                   "lastName",
-                  "email",
-                  "displayName"
+                  "email"
                 ],
                 "properties": {
                   "employeeId": {
@@ -1525,10 +1512,6 @@
                     "type": "string",
                     "format": "email",
                     "description": "Manager business email."
-                  },
-                  "displayName": {
-                    "type": "string",
-                    "description": "Manager full name as supplied by the source."
                   }
                 },
                 "nullable": false,
@@ -1714,8 +1697,7 @@
                   "firstName",
                   "middleName",
                   "lastName",
-                  "email",
-                  "displayName"
+                  "email"
                 ],
                 "properties": {
                   "employeeId": {
@@ -1739,10 +1721,6 @@
                     "type": "string",
                     "format": "email",
                     "description": "Manager business email."
-                  },
-                  "displayName": {
-                    "type": "string",
-                    "description": "Manager full name as supplied by the source."
                   }
                 },
                 "nullable": false,

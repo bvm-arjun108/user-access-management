@@ -25,7 +25,6 @@ CREATE TABLE pharos_uam.employee (
     manager_first_name          TEXT CHECK (btrim(manager_first_name) <> ''),
     manager_middle_name         TEXT,
     manager_last_name           TEXT CHECK (btrim(manager_last_name) <> ''),
-    manager_display_name        TEXT CHECK (btrim(manager_display_name) <> ''),
     manager_email               TEXT CHECK (btrim(manager_email) <> ''),
     employee_last_synced_at       TIMESTAMPTZ,
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
@@ -42,7 +41,7 @@ CREATE TABLE pharos_uam.employee (
             AND country IS NOT NULL AND region IS NOT NULL AND site IS NOT NULL
             AND supervisory_organization IS NOT NULL AND employee_last_synced_at IS NOT NULL
             AND manager_employee_id IS NOT NULL AND manager_first_name IS NOT NULL
-            AND manager_last_name IS NOT NULL AND manager_email IS NOT NULL AND manager_display_name IS NOT NULL
+            AND manager_last_name IS NOT NULL AND manager_email IS NOT NULL
         )
     )
 );

@@ -24,7 +24,7 @@ public class EventValidator {
   private static final Set<String> PROFILE = Set.of("employeeId", "sourceSystem", "firstName", "middleName", "lastName", "email",
       "employmentStatus", "hireDate", "terminationDate", "employmentType", "employeeClass", "account", "superiorOrganization",
       "organizationId", "country", "region", "site", "supervisoryOrganization", "employeeLastSyncedAt", "manager", "iPassRoles");
-  private static final Set<String> MANAGER = Set.of("employeeId", "firstName", "middleName", "lastName", "displayName", "email");
+  private static final Set<String> MANAGER = Set.of("employeeId", "firstName", "middleName", "lastName", "email");
   private static final Set<String> ROLE = Set.of("entitlementValue", "entitlementType", "roleName", "displayName", "roleDescription",
       "isPharosGroup", "isAvailableForRequest", "isPrivileged", "owners", "assignedAt", "assignmentStatus");
   private static final Set<String> ACCOUNT = Set.of("application", "oktaAccountId");

@@ -33,7 +33,6 @@ erDiagram
         text manager_first_name "Required when ACTIVE"
         text manager_middle_name "Nullable"
         text manager_last_name "Required when ACTIVE"
-        text manager_display_name "Required when ACTIVE"
         text manager_email "Required when ACTIVE"
         timestamptz employee_last_synced_at "Required when ACTIVE"
         timestamptz created_at "Required"

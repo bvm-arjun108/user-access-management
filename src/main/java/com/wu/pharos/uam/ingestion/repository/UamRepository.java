@@ -93,8 +93,8 @@ public class UamRepository {
     p.put("employee_last_synced_at", OffsetDateTime.ofInstant(EventValidator.timestamp(u, "employeeLastSyncedAt"), java.time.ZoneOffset.UTC));
     JsonNode m = u.get("manager");
     String[][] manager = {{"employeeId", "manager_employee_id"}, {"firstName", "manager_first_name"},
-        {"middleName", "manager_middle_name"}, {"lastName", "manager_last_name"},
-        {"displayName", "manager_display_name"}, {"email", "manager_email"}};
+        {"middleName", "manager_middle_name"},
+        {"lastName", "manager_last_name"}, {"email", "manager_email"}};
     for (String[] field : manager) {
       p.put(field[1], m.get(field[0]).isNull() ? null : m.get(field[0]).asString());
     }
