@@ -1,8 +1,8 @@
 package com.wu.pharos.uam.common.error;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
+import com.wu.pharos.uam.common.web.CorrelationIdFilter;
+import org.slf4j.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -43,12 +43,12 @@ public class ApiExceptionHandler {
   }
 
   private ResponseEntity<ApiError> response(HttpStatus status, String code, String message) {
-    String correlation = UUID.randomUUID().toString();
+    String correlation = MDC.get(CorrelationIdFilter.MDC_KEY);
     // Do not log payloads, SQL parameters, or exception text containing employee data.
     LOG.warn("Request rejected code={} status={} correlationId={}", code, status.value(), correlation);
     return ResponseEntity
       .status(status)
       .header("X-Correlation-ID", correlation)
-      .body(new ApiError(Instant.now(), status.value(), code, message, correlation, List.of()));
+      .body(new ApiError(Instant.now(), status.value(), code, message, correlation));
   }
 }

@@ -50,7 +50,7 @@ Employee/assignment changes and successful event status commit together. Failure
 
 No eventVersion is used. iPass must preserve employee event order, including retries. Employee and role identifiers must be stable across source systems. One Pharos environment per deployment.
 
-Granular permission editing and external session revocation are separate integrations. New roles remain PENDING until their Pharos mapping is configured.
+Granular permission editing and external session revocation are separate integrations.
 
 ## Tests
 
@@ -73,8 +73,14 @@ Six tables: employee, account, role, role_owner, account_role and ipass_event. A
 
 Each supplied role carries a complete owners list. [] clears owners; missing/null is invalid. Owners belong to shared role definitions, not assignments. Role removal never deletes owners. iPass must provide current role metadata when sending or manually retriggering a snapshot; shared metadata is applied in processing order without independent role versioning.
 
-isAvailableForRequest and isPrivileged are stored role metadata and never activate permissions. isPrivileged is placed at role level under the agreed sample; confirm its source meaning before production integration. Existing entitlement names require review before renaming; displayName, description, flags and owners can update normally. New catalog entries remain PENDING.
+isAvailableForRequest and isPrivileged are stored role metadata and never activate permissions. isPrivileged is placed at role level under the agreed sample; confirm its source meaning before production integration. Existing entitlement names require review before renaming; displayName, description, flags and owners can update normally.
 
 Employee class is preserved as source text. Human employee/contractor ingestion still requires a Workday/VNDLY identity and profile. Robot/service-account lifecycle is not implemented by inventing employment data.
 
 Database setup contains no triggers or stored functions. Optional query indexes are deferred until needed. Only key/uniqueness indexes are retained; updated_at is maintained by application SQL.
+
+The single OpenAPI source is `src/main/resources/static/openapi/ipass.json`, served at `/openapi/ipass.json`.
+
+Assignment `removed_at` records when Pharos closed the assignment, including immediate termination. It does not confirm that iPass removed its membership.
+
+Every HTTP response includes a Pharos-generated UUID in `X-Correlation-ID`. The same value appears in request logs and error bodies. Each retry gets a new correlation ID; keep the original eventId for duplicate protection. No correlation request header is required.

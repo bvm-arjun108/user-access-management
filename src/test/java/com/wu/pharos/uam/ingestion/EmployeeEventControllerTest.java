@@ -27,13 +27,29 @@ class EmployeeEventControllerTest {
     mvc
       .perform(post("/api/v1/ipass/events").contentType("application/json").content("{}"))
       .andExpect(status().isOk())
+      .andExpect(header().string("X-Correlation-ID", org.hamcrest.Matchers.matchesPattern("[0-9a-f-]{36}")))
       .andExpect(jsonPath("$.status").value("SUCCESS"))
       .andExpect(jsonPath("$.eventId").isNotEmpty())
       .andExpect(jsonPath("$.*").value(org.hamcrest.Matchers.hasSize(2)));
   }
 
   @Test
+  void generatesANewCorrelationIdForEachRequestAndClearsLoggingContext() throws Exception {
+    when(service.process(any())).thenReturn(new EventResult(UUID.randomUUID(), "SUCCESS"));
+    var first = mvc.perform(post("/api/v1/ipass/events").contentType("application/json").content("{}")).andReturn();
+    var second = mvc.perform(post("/api/v1/ipass/events").contentType("application/json").content("{}")).andReturn();
+    org.junit.jupiter.api.Assertions.assertNotEquals(first.getResponse().getHeader("X-Correlation-ID"),
+        second.getResponse().getHeader("X-Correlation-ID"));
+    org.junit.jupiter.api.Assertions.assertNull(org.slf4j.MDC.get("correlationId"));
+  }
+
+  @Test
   void rejectsMalformedJson() throws Exception {
-    mvc.perform(post("/api/v1/ipass/events").contentType("application/json").content("{")).andExpect(status().isBadRequest());
+    mvc
+      .perform(post("/api/v1/ipass/events").contentType("application/json").content("{"))
+      .andExpect(status().isBadRequest())
+      .andExpect(jsonPath("$.details").doesNotExist())
+      .andDo(result -> org.junit.jupiter.api.Assertions.assertEquals(result.getResponse().getHeader("X-Correlation-ID"),
+          new tools.jackson.databind.ObjectMapper().readTree(result.getResponse().getContentAsString()).get("correlationId").asString()));
   }
 }

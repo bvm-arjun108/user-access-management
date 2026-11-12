@@ -41,6 +41,8 @@ springdoc:
     disable-swagger-default-url: true
     display-request-duration: true
 logging:
+  pattern:
+    level: "%5p [correlationId=%X{correlationId}]"
   level:
     com.wu.pharos.uam: INFO
     org.springframework.jdbc.core: WARN

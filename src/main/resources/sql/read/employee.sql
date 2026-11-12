@@ -7,9 +7,7 @@ SELECT jsonb_build_object('employee',to_jsonb(e),'accounts',COALESCE((
  'owners',COALESCE((SELECT jsonb_agg(jsonb_build_object('ownerId',o.owner_id,'firstName',o.first_name,'lastName',o.last_name,'email',o.email)
  ORDER BY o.owner_id) FROM pharos_uam.role_owner o WHERE o.role_id=r.role_id),'[]'::jsonb),
  'assignedAt',ar.assigned_at,'removedAt',ar.removed_at,
- 'assignmentStatus',CASE WHEN ar.removed_at IS NULL THEN 'PROVISIONED' ELSE 'REMOVED' END,
- 'permissionMappingStatus',r.permission_mapping_status,
- 'authorizationEligible',e.employment_status='ACTIVE' AND ar.removed_at IS NULL AND r.permission_mapping_status='ACTIVE') ORDER BY ar.assignment_id)
+ 'assignmentStatus',CASE WHEN ar.removed_at IS NULL THEN 'PROVISIONED' ELSE 'REMOVED' END) ORDER BY ar.assignment_id)
  FROM pharos_uam.account_role ar JOIN pharos_uam.role r ON r.role_id=ar.role_id WHERE ar.account_id=a.account_id),'[]'::jsonb))
  ORDER BY a.account_id) FROM pharos_uam.account a WHERE a.employee_id=e.employee_id AND a.environment=:environment),'[]'::jsonb))::text AS data
 FROM pharos_uam.employee e WHERE e.employee_id=:employee

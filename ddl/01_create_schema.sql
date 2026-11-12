@@ -71,7 +71,6 @@ role_id             BIGINT GENERATED ALWAYS AS IDENTITY CONSTRAINT pk_role PRIMA
     is_pharos_group     BOOLEAN NOT NULL CHECK (is_pharos_group),
     is_available_for_request BOOLEAN NOT NULL,
     is_privileged       BOOLEAN NOT NULL,
-    permission_mapping_status TEXT NOT NULL DEFAULT 'PENDING' CHECK (permission_mapping_status IN ('PENDING','ACTIVE')),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     CONSTRAINT uq_role_entitlement UNIQUE(application,environment,entitlement_value),

@@ -25,7 +25,7 @@
         ],
         "operationId": "processEmployeeEvent",
         "summary": "Send employee details and current Pharos roles",
-        "description": "Send one employee/account snapshot for one environment. Only approved, effective Pharos roles belong in iPassRoles.\n\n- Include all employee fields, account, manager and iPassRoles for provisioning/updates. Middle names may be null; terminationDate must be null while ACTIVE.\n- Account IDs and entitlement values are scoped by application and environment. An existing account cannot be reassigned to another employee.\n- Omitted roles are revoked from the specified account only. Missing/null iPassRoles is invalid; [] removes all account assignments.\n- Owners are shared role metadata. Send their complete list; [] clears it. Removing an assignment never removes a role or its owners.\n- Flags are JSON booleans. Requestability and privilege flags do not grant or revoke access by themselves.\n- New roles remain PENDING granular configuration. Changing a known entitlement's roleName requires review and returns 409.\n- Termination needs only employeeId and TERMINATED status, plus terminationDate when known. It closes assignments for every linked account in this deployment, regardless of the 15-day iPass cleanup. Optional role/profile content does not restore access.\n- Approved USER_PROVISIONED is required after termination. Only assignments explicitly supplied for that account are restored.\n- New event: new UUID. Identical retry: same UUID and payload. Retry failures with the same event; use a new UUID for corrected content. Source deliveries must stay in order.",
+        "description": "Send one employee/account snapshot for one environment. Only approved, effective Pharos roles belong in iPassRoles.\n\n- Include all employee fields, account, manager and iPassRoles for provisioning/updates. Middle names may be null; terminationDate must be null while ACTIVE.\n- Account IDs and entitlement values are scoped by application and environment. An existing account cannot be reassigned to another employee.\n- Omitted roles are revoked from the specified account only. Missing/null iPassRoles is invalid; [] removes all account assignments.\n- Owners are shared role metadata. Send their complete list; [] clears it. Removing an assignment never removes a role or its owners.\n- Flags are JSON booleans. Requestability and privilege flags do not grant or revoke access by themselves.\n- Changing a known entitlement's roleName requires review and returns 409.\n- Termination needs only employeeId and TERMINATED status, plus terminationDate when known. It closes assignments for every linked account in this deployment, regardless of the 15-day iPass cleanup. Optional role/profile content does not restore access.\n- Approved USER_PROVISIONED is required after termination. Only assignments explicitly supplied for that account are restored.\n- New event: new UUID. Identical retry: same UUID and payload. Retry failures with the same event; use a new UUID for corrected content. Source deliveries must stay in order.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1145,6 +1145,11 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
+              }
             }
           },
           "400": {
@@ -1154,6 +1159,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
+              }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
               }
             }
           },
@@ -1165,6 +1175,11 @@
                   "$ref": "#/components/schemas/Error"
                 }
               }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
+              }
             }
           },
           "422": {
@@ -1174,6 +1189,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
+              }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
               }
             }
           },
@@ -1193,6 +1213,9 @@
                   "type": "integer",
                   "minimum": 1
                 }
+              },
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
               }
             }
           },
@@ -1212,6 +1235,9 @@
                   "type": "integer",
                   "minimum": 1
                 }
+              },
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
               }
             }
           },
@@ -1222,6 +1248,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
+              }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
               }
             }
           }
@@ -1253,10 +1284,20 @@
                   "$ref": "#/components/schemas/EmployeeState"
                 }
               }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
+              }
             }
           },
           "404": {
-            "description": "Employee not found"
+            "description": "Employee not found",
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
+              }
+            }
           }
         }
       }
@@ -1280,10 +1321,20 @@
         ],
         "responses": {
           "200": {
-            "description": "Stored event result"
+            "description": "Stored event result",
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
+              }
+            }
           },
           "404": {
-            "description": "Event not found"
+            "description": "Event not found",
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
+              }
+            }
           }
         }
       }
@@ -1892,8 +1943,7 @@
           "status",
           "code",
           "message",
-          "correlationId",
-          "details"
+          "correlationId"
         ],
         "properties": {
           "timestamp": {
@@ -1912,20 +1962,6 @@
           "correlationId": {
             "type": "string",
             "format": "uuid"
-          },
-          "details": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "field": {
-                  "type": "string"
-                },
-                "message": {
-                  "type": "string"
-                }
-              }
-            }
           }
         }
       },
@@ -1955,7 +1991,7 @@
                   "items": {
                     "type": "object"
                   },
-                  "description": "All assignment periods, current role metadata and owners; authorizationEligible is not a granular permission list."
+                  "description": "All assignment periods, current role metadata and owners. removedAt records when Pharos closed the assignment, including termination; it does not confirm iPass membership removal."
                 }
               }
             }
@@ -2090,6 +2126,15 @@
           }
         },
         "description": "One current approved Pharos entitlement. Shared role metadata and account assignment are stored separately."
+      }
+    },
+    "headers": {
+      "CorrelationId": {
+        "description": "Pharos-generated UUID for this HTTP request. Quote it when troubleshooting. Retries receive a new correlation ID; eventId remains unchanged.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
       }
     }
   }

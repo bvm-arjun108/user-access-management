@@ -276,9 +276,6 @@ class EmployeeLifecycleIT {
       .isEqualTo("ROLE-OWNER-NEW");
     assertThat(jdbc.queryForObject("SELECT is_privileged FROM pharos_uam.role WHERE entitlement_value='00gProdKycAnalyst001'", Boolean.class))
       .isTrue();
-    assertThat(jdbc.queryForObject("SELECT permission_mapping_status FROM pharos_uam.role WHERE entitlement_value='00gProdKycAnalyst001'",
-        String.class))
-      .isEqualTo("PENDING");
   }
 
   @Test
@@ -331,6 +328,7 @@ class EmployeeLifecycleIT {
     assertThat(body.get("accounts").size()).isEqualTo(1);
     JsonNode account = body.get("accounts").get(0);
     assertThat(account.get("assignments").size()).isEqualTo(3);
+    assertThat(response.body()).doesNotContain("permissionMappingStatus", "authorizationEligible", "permission_mapping_status");
     assertThat(account.get("assignments").get(0).get("owners").size()).isEqualTo(1);
     assertThat(body.get("employee").get("employee_class").asString()).isEqualTo("Employee");
     assertThat(body.get("employee").get("manager_display_name").asString()).isEqualTo("Maya Patel");

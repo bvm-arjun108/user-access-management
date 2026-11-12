@@ -21,13 +21,13 @@ Account ID may differ across environments. Owner identity is separate from the r
 | Profile changes | USER_UPDATED | Update profile and retain the complete current account role list | [08](examples/08-profile-update.json) |
 | Access after all roles were removed | USER_UPDATED | Create new assignment periods; keep closed history | [09](examples/09-access-after-last-role-removal.json) |
 | VNDLY contractor | USER_PROVISIONED | Same account/assignment model | [10](examples/10-contractor-provisioning.json) |
-| Identical retry | Same UUID and unchanged payload | Return DUPLICATE; no repeated changes | [11](examples/11-identical-retry.json) |
+| Identical retry | Same UUID and unchanged payload | Return SUCCESS; no repeated changes | [11](examples/11-identical-retry.json) |
 | Second account | USER_UPDATED with another accountId | Add/update that account; leave first account's roles intact | [12](examples/12-second-account.json) |
 | Owner list changes | USER_UPDATED with complete roles and current owners | Update shared owners; do not change continuing assignment times | [13](examples/13-role-owners-update.json) |
 
 ## Processing
 
-Validate → record/find UUID → serialize employee changes → save profile/account/catalog/owners → reconcile supplied account assignments → commit with APPLIED status. Failure rolls back business changes and records FAILED separately. Duplicate APPLIED events return their original result. Different content under the same UUID returns 409.
+Validate → record/find UUID → serialize employee changes → save profile/account/catalog/owners → reconcile supplied account assignments → commit with APPLIED status. Failure rolls back business changes and records FAILED separately. Identical retries of APPLIED events return SUCCESS without repeated changes. Different content under the same UUID returns 409.
 
 The same account cannot be assigned to another employee. Missing roles, malformed booleans and duplicate entitlement/owner IDs are rejected. Role names must match the environment. Owners need not have employee records. A missing manager blocks provisioning/updates, never minimal termination.
 
@@ -38,3 +38,5 @@ Send termination immediately when effective; do not wait for iPass's 15-day memb
 iPass reviews failed deliveries and may require manual retriggering; automatic retry is not a confirmed capability. Identical retrigger: same event UUID/payload. New or corrected snapshot: new UUID. Ordered employee delivery, including manual retriggers, must be agreed; no eventVersion or timestamp-based stale-event rejection is implemented.
 
 This module stores ingestion state. Granular permission editing and external session revocation are separate integrations.
+
+Assignment removed_at is the time Pharos closed access, including termination; it is not confirmation of iPass membership removal.
