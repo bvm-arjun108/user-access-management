@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5441/pharos_uam_test}
+    username: ${TEST_DB_USER:uam_test}
+    password: ${TEST_DB_PASSWORD:uam_test_only}

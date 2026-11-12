@@ -1,0 +1,37 @@
+name: pharos-uam
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${UAM_DB_NAME:-uam}
+      POSTGRES_USER: ${UAM_DB_USER:-uam}
+      POSTGRES_PASSWORD: ${UAM_DB_PASSWORD:-uamLocal}
+    ports:
+      - "127.0.0.1:${UAM_DB_PORT:-5440}:5432"
+    volumes:
+      - uam_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    stop_grace_period: 30s
+  postgres-test:
+    image: postgres:16
+    profiles: [test]
+    environment:
+      POSTGRES_DB: pharos_uam_test
+      POSTGRES_USER: uam_test
+      POSTGRES_PASSWORD: uam_test_only
+    ports:
+      - "127.0.0.1:${UAM_TEST_DB_PORT:-5441}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uam_test -d pharos_uam_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  uam_postgres_data:

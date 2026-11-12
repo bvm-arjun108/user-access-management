@@ -1,0 +1,2148 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "iPass \u2192 Pharos | Employee Access API",
+    "version": "2.0.0",
+    "description": "Employee-centric ingestion from iPass to Pharos. No authentication or automatic database setup is configured.\n\n| Event | Required data | Result |\n| --- | --- | --- |\n| USER_PROVISIONED | Full employee, account and approved iPassRoles | Add access or explicitly restore a terminated employee. |\n| USER_UPDATED | Full employee, account and complete current iPassRoles | Update profile and replace assignments for that account only. |\n| USER_TERMINATED | employeeId and TERMINATED status | Disable employment and close all account assignments in this deployment. |\n\nAccount identity is application + environment + accountId. Role identity is application + environment + entitlementValue. Internal numeric database keys are never sent by iPass.\n\nNew event: new UUID. Identical retry: same UUID and unchanged payload. No eventVersion; iPass must preserve employee event order. Employee identity must stay stable across source systems and rehire.\n\nRun manual DDL before starting the API. Existing four-table installations use the separate non-destructive upgrade script and fresh iPass snapshots. Example IDs and data are fictional."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8086",
+      "description": "Local profile only"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Employee access",
+      "description": "One employee and one environment per request."
+    }
+  ],
+  "paths": {
+    "/api/v1/ipass/events": {
+      "post": {
+        "tags": [
+          "Employee access"
+        ],
+        "operationId": "processEmployeeEvent",
+        "summary": "Send employee details and current Pharos roles",
+        "description": "Send one employee/account snapshot for one environment. Only approved, effective Pharos roles belong in iPassRoles.\n\n- Include all employee fields, account, manager and iPassRoles for provisioning/updates. Middle names may be null; terminationDate must be null while ACTIVE.\n- Account IDs and entitlement values are scoped by application and environment. An existing account cannot be reassigned to another employee.\n- Omitted roles are revoked from the specified account only. Missing/null iPassRoles is invalid; [] removes all account assignments.\n- Owners are shared role metadata. Send their complete list; [] clears it. Removing an assignment never removes a role or its owners.\n- Flags are JSON booleans. Requestability and privilege flags do not grant or revoke access by themselves.\n- New roles remain PENDING granular configuration. Changing a known entitlement's roleName requires review and returns 409.\n- Termination needs only employeeId and TERMINATED status, plus terminationDate when known. It closes assignments for every linked account in this deployment, regardless of the 15-day iPass cleanup. Optional role/profile content does not restore access.\n- Approved USER_PROVISIONED is required after termination. Only assignments explicitly supplied for that account are restored.\n- New event: new UUID. Identical retry: same UUID and payload. Retry failures with the same event; use a new UUID for corrected content. Source deliveries must stay in order.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeEvent"
+              },
+              "examples": {
+                "01-first-provisioning": {
+                  "summary": "01 first provisioning",
+                  "value": {
+                    "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
+                    "eventType": "USER_PROVISIONED",
+                    "occurredAt": "2026-07-11T14:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-07-11T14:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_GSI_Analyst",
+                          "roleDescription": "GSI Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdGsiAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "GSI Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "02-remove-gsi": {
+                  "summary": "02 remove gsi",
+                  "value": {
+                    "eventId": "c3809b3c-45a2-4df9-adaf-b00a507f08bd",
+                    "eventType": "USER_UPDATED",
+                    "occurredAt": "2026-07-17T10:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-07-17T10:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "03-add-gdd": {
+                  "summary": "03 add gdd",
+                  "value": {
+                    "eventId": "8368fa3b-d25f-46f8-aab1-6d505b89324c",
+                    "eventType": "USER_UPDATED",
+                    "occurredAt": "2026-07-30T11:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-07-30T11:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_GDD_Analyst",
+                          "roleDescription": "GDD Analyst",
+                          "assignedAt": "2026-07-30T11:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "GDD Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "04-termination": {
+                  "summary": "04 termination",
+                  "value": {
+                    "eventId": "05e09592-7f11-4251-b523-91ac52a98364",
+                    "eventType": "USER_TERMINATED",
+                    "occurredAt": "2026-08-31T17:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "employmentStatus": "TERMINATED",
+                      "terminationDate": "2026-08-31"
+                    }
+                  }
+                },
+                "05-termination-correction": {
+                  "summary": "05 termination correction",
+                  "value": {
+                    "eventId": "e971664d-a845-4ef1-9bae-b1b4a64da2e7",
+                    "eventType": "USER_PROVISIONED",
+                    "occurredAt": "2026-09-02T09:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-09-02T09:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-09-02T09:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-09-02T09:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_GDD_Analyst",
+                          "roleDescription": "GDD Analyst",
+                          "assignedAt": "2026-09-02T09:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "GDD Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "06-genuine-rehire": {
+                  "summary": "06 genuine rehire",
+                  "value": {
+                    "eventId": "3890f259-97c7-4b0d-9ac2-eabe3139b4a7",
+                    "eventType": "USER_PROVISIONED",
+                    "occurredAt": "2026-09-02T09:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-09-02",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-09-02T09:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-09-02T09:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "07-remove-all-roles": {
+                  "summary": "07 remove all roles",
+                  "value": {
+                    "eventId": "246e1b5c-a706-4794-bcd6-4a6c27ccb82d",
+                    "eventType": "USER_UPDATED",
+                    "occurredAt": "2026-08-10T12:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-08-10T12:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "08-profile-update": {
+                  "summary": "08 profile update",
+                  "value": {
+                    "eventId": "165e058c-727f-4a18-a6a8-03cc6ba7ffd5",
+                    "eventType": "USER_UPDATED",
+                    "occurredAt": "2026-08-05T12:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "New York",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-08-05T12:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_GDD_Analyst",
+                          "roleDescription": "GDD Analyst",
+                          "assignedAt": "2026-07-30T11:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "GDD Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "09-access-after-last-role-removal": {
+                  "summary": "09 access after last role removal",
+                  "value": {
+                    "eventId": "c4c6e055-cc40-4cae-a659-b8c445939af1",
+                    "eventType": "USER_UPDATED",
+                    "occurredAt": "2026-08-12T12:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-08-12T12:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-08-12T12:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "10-contractor-provisioning": {
+                  "summary": "10 contractor provisioning",
+                  "value": {
+                    "eventId": "426c42d0-a7c5-4f46-b3cb-9cc000dc93c8",
+                    "eventType": "USER_PROVISIONED",
+                    "occurredAt": "2026-07-11T14:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "VNDLY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "CONTRACTOR",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-07-11T14:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_GSI_Analyst",
+                          "roleDescription": "GSI Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdGsiAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "GSI Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Contractor",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "11-identical-retry": {
+                  "summary": "11 identical retry",
+                  "value": {
+                    "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
+                    "eventType": "USER_PROVISIONED",
+                    "occurredAt": "2026-07-11T14:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-07-11T14:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_GSI_Analyst",
+                          "roleDescription": "GSI Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdGsiAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "GSI Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                },
+                "12-second-account": {
+                  "summary": "12 second account",
+                  "value": {
+                    "eventId": "79351adf-76c9-4f90-9070-b14e28ca8874",
+                    "eventType": "USER_UPDATED",
+                    "occurredAt": "2026-07-30T11:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-07-30T11:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_GDD_Analyst",
+                          "roleDescription": "GDD Analyst",
+                          "assignedAt": "2026-07-30T11:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "GDD Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-second-account"
+                      }
+                    }
+                  }
+                },
+                "13-role-owners-update": {
+                  "summary": "13 role owners update",
+                  "value": {
+                    "eventId": "a9c22b4b-b706-4012-aea1-13b8b36e4cce",
+                    "eventType": "USER_UPDATED",
+                    "occurredAt": "2026-07-30T11:00:00Z",
+                    "environment": "Prod",
+                    "user": {
+                      "employeeId": "WU100482",
+                      "sourceSystem": "WORKDAY",
+                      "firstName": "Arjun",
+                      "middleName": null,
+                      "lastName": "Sharma",
+                      "email": "arjun.sharma@example.com",
+                      "employmentStatus": "ACTIVE",
+                      "hireDate": "2026-07-01",
+                      "terminationDate": null,
+                      "employmentType": "FTE",
+                      "superiorOrganization": "Western Union",
+                      "organizationId": "ORG-FCC-101",
+                      "country": "USA",
+                      "region": "North America",
+                      "site": "Denver",
+                      "supervisoryOrganization": "Financial Crime Compliance",
+                      "lastSyncedAt": "2026-07-30T11:00:00Z",
+                      "manager": {
+                        "employeeId": "WU100210",
+                        "firstName": "Maya",
+                        "middleName": "R",
+                        "lastName": "Patel",
+                        "email": "maya.patel@example.com",
+                        "displayName": "Maya Patel"
+                      },
+                      "iPassRoles": [
+                        {
+                          "roleName": "APP_Pharos_Prod_KYC_Analyst",
+                          "roleDescription": "KYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdKycAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "KYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100311",
+                              "firstName": "Daniel",
+                              "lastName": "Lee",
+                              "email": "daniel.lee@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+                          "roleDescription": "BKYC Analyst",
+                          "assignedAt": "2026-07-11T14:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdBkycAnalyst01",
+                          "entitlementType": "groups",
+                          "displayName": "BKYC Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        },
+                        {
+                          "roleName": "APP_Pharos_Prod_GDD_Analyst",
+                          "roleDescription": "GDD Analyst",
+                          "assignedAt": "2026-07-30T11:00:00Z",
+                          "assignmentStatus": "PROVISIONED",
+                          "entitlementValue": "00gProdGddAnalyst001",
+                          "entitlementType": "groups",
+                          "displayName": "GDD Analyst",
+                          "isPharosGroup": true,
+                          "isAvailableForRequest": true,
+                          "isPrivileged": false,
+                          "owners": [
+                            {
+                              "ownerId": "WU100310",
+                              "firstName": "Priya",
+                              "lastName": "Shah",
+                              "email": "priya.shah@example.com"
+                            }
+                          ]
+                        }
+                      ],
+                      "employeeClass": "Employee",
+                      "account": {
+                        "application": "Okta",
+                        "accountId": "00u-WU100482"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "description": "Complete employee/account snapshot, or minimal termination details. Select a scenario below."
+        },
+        "responses": {
+          "200": {
+            "description": "Processed. Check processingStatus and warnings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResult"
+                },
+                "examples": {
+                  "applied": {
+                    "value": {
+                      "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
+                      "processingStatus": "APPLIED",
+                      "processedAt": "2026-11-10T14:00:01Z",
+                      "warnings": []
+                    }
+                  },
+                  "mappingPending": {
+                    "value": {
+                      "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
+                      "processingStatus": "APPLIED",
+                      "processedAt": "2026-11-10T14:00:01Z",
+                      "warnings": [
+                        {
+                          "code": "ROLE_MAPPING_PENDING",
+                          "message": "IPASS-PROD-KYC-001 is stored but grants no permissions until its Pharos mapping is activated."
+                        }
+                      ]
+                    }
+                  },
+                  "duplicate": {
+                    "value": {
+                      "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
+                      "processingStatus": "DUPLICATE",
+                      "processedAt": "2026-11-10T14:00:01Z",
+                      "warnings": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing field, wrong field type, or invalid JSON. Correct the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Event UUID reused with different content, account linked to another employee, conflicting entitlement name, or disallowed reactivation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid field combination, repeated role ID, wrong role environment, or future assignment. Correct the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests. Wait as instructed by Retry-After, then retry the same event.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds before retrying.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service temporarily unavailable. Retry the same event with a delay.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Suggested retry delay in seconds.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error. Retry the same event with a delay.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/employees/{employeeId}": {
+      "get": {
+        "tags": [
+          "Ingestion verification"
+        ],
+        "summary": "Read employee details and assignment history",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee profile and assignment history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeState"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Employee not found"
+          }
+        }
+      }
+    },
+    "/api/v1/ipass/events/{eventId}": {
+      "get": {
+        "tags": [
+          "Ingestion verification"
+        ],
+        "summary": "Read processing result without the HR payload",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stored event result"
+          },
+          "404": {
+            "description": "Event not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserProvisionedEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "eventType",
+          "occurredAt",
+          "environment",
+          "user"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID generated by iPass for this specific event. New change: new UUID. Retry: same UUID and identical payload. PostgreSQL: UUID.",
+            "example": "6e501c35-5967-4b24-a2d3-178eebdc0398",
+            "x-database-type": "UUID",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "USER_PROVISIONED"
+            ],
+            "description": "Adds an employee or restores approved access. Requires ACTIVE employment and at least one role."
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Change timestamp with timezone (RFC 3339)."
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "Prod",
+              "UAT",
+              "Dev"
+            ],
+            "description": "Pharos environment this request updates."
+          },
+          "user": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "employeeId",
+              "sourceSystem",
+              "firstName",
+              "middleName",
+              "lastName",
+              "email",
+              "employmentStatus",
+              "hireDate",
+              "terminationDate",
+              "employmentType",
+              "superiorOrganization",
+              "organizationId",
+              "country",
+              "region",
+              "site",
+              "supervisoryOrganization",
+              "lastSyncedAt",
+              "manager",
+              "iPassRoles",
+              "account",
+              "employeeClass"
+            ],
+            "properties": {
+              "employeeId": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Unique, permanent employee ID. Must identify the same person across messages; do not use email as the ID."
+              },
+              "sourceSystem": {
+                "type": "string",
+                "enum": [
+                  "WORKDAY",
+                  "VNDLY"
+                ],
+                "description": "Where the employee details came from: Workday or VNDLY."
+              },
+              "firstName": {
+                "type": "string",
+                "description": "Employee first name."
+              },
+              "middleName": {
+                "type": "string",
+                "nullable": true,
+                "description": "Employee middle name; null if none."
+              },
+              "lastName": {
+                "type": "string",
+                "description": "Employee last name."
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Employee business email."
+              },
+              "employmentStatus": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE"
+                ],
+                "description": "ACTIVE for provisioning and updates; TERMINATED for termination."
+              },
+              "hireDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Employment or contractor start date: YYYY-MM-DD."
+              },
+              "terminationDate": {
+                "type": "string",
+                "nullable": true,
+                "description": "Must be null for an active employee.",
+                "format": "date"
+              },
+              "employmentType": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Employment category supplied by iPass, for example FTE or CONTRACTOR."
+              },
+              "superiorOrganization": {
+                "type": "string",
+                "description": "Parent organization supplied by the source system."
+              },
+              "organizationId": {
+                "type": "string",
+                "description": "Employee organization ID supplied by the source system."
+              },
+              "country": {
+                "type": "string",
+                "description": "Employee work country."
+              },
+              "region": {
+                "type": "string",
+                "description": "Employee work region."
+              },
+              "site": {
+                "type": "string",
+                "description": "Employee work location."
+              },
+              "supervisoryOrganization": {
+                "type": "string",
+                "description": "Employee supervisory organization supplied by the source system."
+              },
+              "lastSyncedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When iPass last synchronized the employee details from Workday or VNDLY."
+              },
+              "manager": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "employeeId",
+                  "firstName",
+                  "middleName",
+                  "lastName",
+                  "email",
+                  "displayName"
+                ],
+                "properties": {
+                  "employeeId": {
+                    "type": "string",
+                    "description": "Manager employee ID."
+                  },
+                  "firstName": {
+                    "type": "string",
+                    "description": "Manager first name."
+                  },
+                  "middleName": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Manager middle name; null if none."
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "Manager last name."
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Manager business email."
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "description": "Manager full name as supplied by the source."
+                  }
+                },
+                "nullable": false,
+                "description": "Required employee manager details."
+              },
+              "iPassRoles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IPassRole"
+                },
+                "description": "Complete approved Pharos assignments for this account/application/environment. [] removes all from this account only; missing/null is invalid.",
+                "minItems": 1
+              },
+              "account": {
+                "$ref": "#/components/schemas/Account"
+              },
+              "employeeClass": {
+                "type": "string",
+                "description": "Source employee class, retained separately from employmentType."
+              }
+            },
+            "description": "Complete employee profile, manager, account and account-scoped Pharos role snapshot."
+          }
+        },
+        "title": "Add or restore employee access",
+        "description": "Adds an employee or restores approved access. Requires ACTIVE employment and at least one role."
+      },
+      "UserUpdatedEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "eventType",
+          "occurredAt",
+          "environment",
+          "user"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID generated by iPass for this specific event. New change: new UUID. Retry: same UUID and identical payload. PostgreSQL: UUID.",
+            "example": "6e501c35-5967-4b24-a2d3-178eebdc0398",
+            "x-database-type": "UUID",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "USER_UPDATED"
+            ],
+            "description": "Updates an active employee. Send every remaining role; an empty list removes all roles in the environment."
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Change timestamp with timezone (RFC 3339)."
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "Prod",
+              "UAT",
+              "Dev"
+            ],
+            "description": "Pharos environment this request updates."
+          },
+          "user": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "employeeId",
+              "sourceSystem",
+              "firstName",
+              "middleName",
+              "lastName",
+              "email",
+              "employmentStatus",
+              "hireDate",
+              "terminationDate",
+              "employmentType",
+              "superiorOrganization",
+              "organizationId",
+              "country",
+              "region",
+              "site",
+              "supervisoryOrganization",
+              "lastSyncedAt",
+              "manager",
+              "iPassRoles",
+              "account",
+              "employeeClass"
+            ],
+            "properties": {
+              "employeeId": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Unique, permanent employee ID. Must identify the same person across messages; do not use email as the ID."
+              },
+              "sourceSystem": {
+                "type": "string",
+                "enum": [
+                  "WORKDAY",
+                  "VNDLY"
+                ],
+                "description": "Where the employee details came from: Workday or VNDLY."
+              },
+              "firstName": {
+                "type": "string",
+                "description": "Employee first name."
+              },
+              "middleName": {
+                "type": "string",
+                "nullable": true,
+                "description": "Employee middle name; null if none."
+              },
+              "lastName": {
+                "type": "string",
+                "description": "Employee last name."
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Employee business email."
+              },
+              "employmentStatus": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE"
+                ],
+                "description": "ACTIVE for provisioning and updates; TERMINATED for termination."
+              },
+              "hireDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Employment or contractor start date: YYYY-MM-DD."
+              },
+              "terminationDate": {
+                "type": "string",
+                "nullable": true,
+                "description": "Must be null for an active employee.",
+                "format": "date"
+              },
+              "employmentType": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Employment category supplied by iPass, for example FTE or CONTRACTOR."
+              },
+              "superiorOrganization": {
+                "type": "string",
+                "description": "Parent organization supplied by the source system."
+              },
+              "organizationId": {
+                "type": "string",
+                "description": "Employee organization ID supplied by the source system."
+              },
+              "country": {
+                "type": "string",
+                "description": "Employee work country."
+              },
+              "region": {
+                "type": "string",
+                "description": "Employee work region."
+              },
+              "site": {
+                "type": "string",
+                "description": "Employee work location."
+              },
+              "supervisoryOrganization": {
+                "type": "string",
+                "description": "Employee supervisory organization supplied by the source system."
+              },
+              "lastSyncedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When iPass last synchronized the employee details from Workday or VNDLY."
+              },
+              "manager": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "employeeId",
+                  "firstName",
+                  "middleName",
+                  "lastName",
+                  "email",
+                  "displayName"
+                ],
+                "properties": {
+                  "employeeId": {
+                    "type": "string",
+                    "description": "Manager employee ID."
+                  },
+                  "firstName": {
+                    "type": "string",
+                    "description": "Manager first name."
+                  },
+                  "middleName": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Manager middle name; null if none."
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "Manager last name."
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Manager business email."
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "description": "Manager full name as supplied by the source."
+                  }
+                },
+                "nullable": false,
+                "description": "Required employee manager details."
+              },
+              "iPassRoles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IPassRole"
+                },
+                "description": "Complete approved Pharos assignments for this account/application/environment. [] removes all from this account only; missing/null is invalid."
+              },
+              "account": {
+                "$ref": "#/components/schemas/Account"
+              },
+              "employeeClass": {
+                "type": "string",
+                "description": "Source employee class, retained separately from employmentType."
+              }
+            },
+            "description": "Complete employee profile, manager, account and account-scoped Pharos role snapshot."
+          }
+        },
+        "title": "Update employee details or roles",
+        "description": "Updates an active employee. Send every remaining role; an empty list removes all roles in the environment."
+      },
+      "UserTerminatedEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "eventType",
+          "occurredAt",
+          "environment",
+          "user"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID generated by iPass for this specific event. New change: new UUID. Retry: same UUID and identical payload. PostgreSQL: UUID.",
+            "example": "6e501c35-5967-4b24-a2d3-178eebdc0398",
+            "x-database-type": "UUID",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "USER_TERMINATED"
+            ],
+            "description": "Disables employee access in the environment. Keeps employee and access history."
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Change timestamp with timezone (RFC 3339)."
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "Prod",
+              "UAT",
+              "Dev"
+            ],
+            "description": "Pharos environment this request updates."
+          },
+          "user": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "employeeId",
+              "employmentStatus"
+            ],
+            "properties": {
+              "employeeId": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Unique, permanent employee ID. Must identify the same person across messages; do not use email as the ID."
+              },
+              "sourceSystem": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "firstName": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "middleName": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "lastName": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "email": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "employmentStatus": {
+                "type": "string",
+                "enum": [
+                  "TERMINATED"
+                ],
+                "description": "ACTIVE for provisioning and updates; TERMINATED for termination."
+              },
+              "hireDate": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "terminationDate": {
+                "type": "string",
+                "format": "date",
+                "nullable": true,
+                "description": "Save the source termination date when supplied. Not required to disable access."
+              },
+              "employmentType": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "superiorOrganization": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "organizationId": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "country": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "region": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "site": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "supervisoryOrganization": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "lastSyncedAt": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "manager": {
+                "description": "Optional on termination. Not validated or used to update the employee profile."
+              },
+              "iPassRoles": {
+                "description": "Omit or send []. Any supplied roles are ignored; access is disabled."
+              }
+            },
+            "description": "Employee ID and TERMINATED status are required. Save terminationDate when supplied. Other optional profile fields do not update the saved profile."
+          }
+        },
+        "title": "Terminate employee access",
+        "description": "Disables employee access. Only employeeId and employmentStatus are required under user. Optional profile data does not update the saved profile."
+      },
+      "EmployeeEvent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/UserProvisionedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/UserUpdatedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/UserTerminatedEvent"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "eventType",
+          "mapping": {
+            "USER_PROVISIONED": "#/components/schemas/UserProvisionedEvent",
+            "USER_UPDATED": "#/components/schemas/UserUpdatedEvent",
+            "USER_TERMINATED": "#/components/schemas/UserTerminatedEvent"
+          }
+        }
+      },
+      "EventResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eventId",
+          "processingStatus",
+          "processedAt",
+          "warnings"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The same UUID received in the request. PostgreSQL: UUID.",
+            "example": "6e501c35-5967-4b24-a2d3-178eebdc0398",
+            "x-database-type": "UUID",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+          },
+          "processingStatus": {
+            "type": "string",
+            "enum": [
+              "APPLIED",
+              "DUPLICATE"
+            ],
+            "description": "APPLIED: processed successfully. DUPLICATE: already applied; no repeated changes."
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Processing completion time; original completion time for a duplicate."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Follow-up items. ROLE_MAPPING_PENDING: role saved without granular permissions. TERMINATION_ROLES_IGNORED: roles discarded during termination. [] means no warnings."
+          }
+        },
+        "description": "Result of processing this event."
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "timestamp",
+          "status",
+          "code",
+          "message",
+          "correlationId",
+          "details"
+        ],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "EmployeeState": {
+        "type": "object",
+        "properties": {
+          "employee": {
+            "type": "object",
+            "description": "Stored employee profile using database column names."
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "accountId": {
+                  "type": "string"
+                },
+                "application": {
+                  "type": "string"
+                },
+                "environment": {
+                  "type": "string"
+                },
+                "assignments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  },
+                  "description": "All assignment periods, current role metadata and owners; authorizationEligible is not a granular permission list."
+                }
+              }
+            }
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "application",
+          "accountId"
+        ],
+        "properties": {
+          "application": {
+            "type": "string",
+            "description": "Account application, for example Okta.",
+            "maxLength": 128
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Opaque source account ID. May differ across environments.",
+            "maxLength": 128
+          }
+        },
+        "description": "Account whose complete role list is supplied."
+      },
+      "RoleOwner": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ownerId",
+          "firstName",
+          "lastName",
+          "email"
+        ],
+        "properties": {
+          "ownerId": {
+            "type": "string",
+            "description": "Source owner identifier; the owner need not have a Pharos account.",
+            "maxLength": 128
+          },
+          "firstName": {
+            "type": "string",
+            "description": "Owner first name."
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Owner last name."
+          },
+          "email": {
+            "type": "string",
+            "description": "Owner email.",
+            "format": "email"
+          }
+        },
+        "description": "Owner of the shared role, not the employee receiving it."
+      },
+      "IPassRole": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entitlementValue",
+          "entitlementType",
+          "roleName",
+          "displayName",
+          "roleDescription",
+          "isPharosGroup",
+          "isAvailableForRequest",
+          "isPrivileged",
+          "owners",
+          "assignedAt",
+          "assignmentStatus"
+        ],
+        "properties": {
+          "entitlementValue": {
+            "type": "string",
+            "description": "Source role identifier, scoped to application and environment.",
+            "maxLength": 128
+          },
+          "entitlementType": {
+            "type": "string",
+            "description": "Source entitlement category, for example groups."
+          },
+          "roleName": {
+            "type": "string",
+            "description": "APP_Pharos_Environment_BusinessGroup_Persona.",
+            "pattern": "^APP_Pharos_(Prod|UAT|Dev)_[A-Za-z0-9]+_[A-Za-z0-9]+$"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable source role name."
+          },
+          "roleDescription": {
+            "type": "string",
+            "description": "Source role description."
+          },
+          "isPharosGroup": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Only Pharos entitlements are accepted."
+          },
+          "isAvailableForRequest": {
+            "type": "boolean",
+            "description": "Requestability metadata. False does not revoke an existing assignment."
+          },
+          "isPrivileged": {
+            "type": "boolean",
+            "description": "Role metadata under the agreed payload shape; does not grant permissions. Confirm its source meaning with iPass."
+          },
+          "owners": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/RoleOwner"
+            },
+            "description": "Complete current owner list for the role. [] clears owners. Missing/null is invalid. ownerId must be unique within the list."
+          },
+          "assignedAt": {
+            "type": "string",
+            "description": "Original assignment time for this account; unchanged while the assignment continues.",
+            "format": "date-time"
+          },
+          "assignmentStatus": {
+            "type": "string",
+            "description": "PROVISIONED only. Removed roles are omitted from the account snapshot.",
+            "enum": [
+              "PROVISIONED"
+            ]
+          }
+        },
+        "description": "One current approved Pharos entitlement. Shared role metadata and account assignment are stored separately."
+      }
+    }
+  }
+}

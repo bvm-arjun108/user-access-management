@@ -1,0 +1,100 @@
+{
+  "eventId": "8368fa3b-d25f-46f8-aab1-6d505b89324c",
+  "eventType": "USER_UPDATED",
+  "occurredAt": "2026-07-30T11:00:00Z",
+  "environment": "Prod",
+  "user": {
+    "employeeId": "WU100482",
+    "sourceSystem": "WORKDAY",
+    "firstName": "Arjun",
+    "middleName": null,
+    "lastName": "Sharma",
+    "email": "arjun.sharma@example.com",
+    "employmentStatus": "ACTIVE",
+    "hireDate": "2026-07-01",
+    "terminationDate": null,
+    "employmentType": "FTE",
+    "superiorOrganization": "Western Union",
+    "organizationId": "ORG-FCC-101",
+    "country": "USA",
+    "region": "North America",
+    "site": "Denver",
+    "supervisoryOrganization": "Financial Crime Compliance",
+    "lastSyncedAt": "2026-07-30T11:00:00Z",
+    "manager": {
+      "employeeId": "WU100210",
+      "firstName": "Maya",
+      "middleName": "R",
+      "lastName": "Patel",
+      "email": "maya.patel@example.com",
+      "displayName": "Maya Patel"
+    },
+    "iPassRoles": [
+      {
+        "roleName": "APP_Pharos_Prod_KYC_Analyst",
+        "roleDescription": "KYC Analyst",
+        "assignedAt": "2026-07-11T14:00:00Z",
+        "assignmentStatus": "PROVISIONED",
+        "entitlementValue": "00gProdKycAnalyst001",
+        "entitlementType": "groups",
+        "displayName": "KYC Analyst",
+        "isPharosGroup": true,
+        "isAvailableForRequest": true,
+        "isPrivileged": false,
+        "owners": [
+          {
+            "ownerId": "WU100310",
+            "firstName": "Priya",
+            "lastName": "Shah",
+            "email": "priya.shah@example.com"
+          }
+        ]
+      },
+      {
+        "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+        "roleDescription": "BKYC Analyst",
+        "assignedAt": "2026-07-11T14:00:00Z",
+        "assignmentStatus": "PROVISIONED",
+        "entitlementValue": "00gProdBkycAnalyst01",
+        "entitlementType": "groups",
+        "displayName": "BKYC Analyst",
+        "isPharosGroup": true,
+        "isAvailableForRequest": true,
+        "isPrivileged": false,
+        "owners": [
+          {
+            "ownerId": "WU100310",
+            "firstName": "Priya",
+            "lastName": "Shah",
+            "email": "priya.shah@example.com"
+          }
+        ]
+      },
+      {
+        "roleName": "APP_Pharos_Prod_GDD_Analyst",
+        "roleDescription": "GDD Analyst",
+        "assignedAt": "2026-07-30T11:00:00Z",
+        "assignmentStatus": "PROVISIONED",
+        "entitlementValue": "00gProdGddAnalyst001",
+        "entitlementType": "groups",
+        "displayName": "GDD Analyst",
+        "isPharosGroup": true,
+        "isAvailableForRequest": true,
+        "isPrivileged": false,
+        "owners": [
+          {
+            "ownerId": "WU100310",
+            "firstName": "Priya",
+            "lastName": "Shah",
+            "email": "priya.shah@example.com"
+          }
+        ]
+      }
+    ],
+    "employeeClass": "Employee",
+    "account": {
+      "application": "Okta",
+      "accountId": "00u-WU100482"
+    }
+  }
+}

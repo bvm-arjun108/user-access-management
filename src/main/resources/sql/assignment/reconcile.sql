@@ -1,0 +1,5 @@
+UPDATE pharos_uam.account_role ar SET removed_at=clock_timestamp(),removed_event_id=:event
+WHERE ar.account_id=:account AND ar.removed_at IS NULL
+AND NOT EXISTS (SELECT 1 FROM jsonb_array_elements(CAST(:roles AS jsonb)) item
+ JOIN pharos_uam.role r ON r.entitlement_value=item->>'entitlementValue'
+ WHERE r.role_id=ar.role_id AND r.application=ar.application AND r.environment=ar.environment)

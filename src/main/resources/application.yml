@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: pharos-uam
+  main:
+    banner-mode: off
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:${UAM_DB_PORT:5440}/${UAM_DB_NAME:uam}}
+    username: ${UAM_DB_USER:uam}
+    password: ${UAM_DB_PASSWORD:uamLocal}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 1
+      connection-timeout: 10000
+  sql:
+    init:
+      mode: never
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8086}
+  shutdown: graceful
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+uam:
+  environment: ${UAM_ENVIRONMENT:Prod}
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    url: /openapi/ipass.json
+    disable-swagger-default-url: true
+    display-request-duration: true
+logging:
+  level:
+    com.wu.pharos.uam: INFO
+    org.springframework.jdbc.core: WARN

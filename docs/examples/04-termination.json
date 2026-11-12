@@ -1,0 +1,11 @@
+{
+  "eventId": "05e09592-7f11-4251-b523-91ac52a98364",
+  "eventType": "USER_TERMINATED",
+  "occurredAt": "2026-08-31T17:00:00Z",
+  "environment": "Prod",
+  "user": {
+    "employeeId": "WU100482",
+    "employmentStatus": "TERMINATED",
+    "terminationDate": "2026-08-31"
+  }
+}

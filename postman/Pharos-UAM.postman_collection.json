@@ -1,0 +1,1094 @@
+{
+  "info": {
+    "name": "Pharos UAM - iPass lifecycle",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run folders in order against the local API. Uses a fresh employee and event UUIDs each run. No eventVersion."
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8086"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Employee lifecycle (run in order)",
+      "item": [
+        {
+          "name": "01 Provision KYC + GSI + BKYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{provisionEventId}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-07-11T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"employeeId\", \"PM-\" + pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"provisionEventId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"removeGsiEventId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"addGddEventId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"profileEventId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"removeAllEventId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"terminateEventId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"blockedUpdateEventId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"restoreEventId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"rehireEventId\",pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 Verify three assignments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));\npm.test(\"Unconfigured roles do not grant eligibility\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).every(a=>!a.authorizationEligible)).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 Retry identical event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{provisionEventId}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-07-11T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Duplicate\",()=>pm.expect(pm.response.json().processingStatus).to.eql(\"DUPLICATE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Same UUID changed payload is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{provisionEventId}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-07-11T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"New York\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 Remove GSI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{removeGsiEventId}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"occurredAt\": \"2026-07-17T10:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-17T10:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 Verify two remaining roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(2));\npm.test(\"Unconfigured roles do not grant eligibility\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).every(a=>!a.authorizationEligible)).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 Add GDD",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{addGddEventId}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"occurredAt\": \"2026-07-30T11:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-30T11:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GDD_Analyst\",\n        \"roleDescription\": \"GDD Analyst\",\n        \"assignedAt\": \"2026-07-30T11:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGddAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GDD Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 Verify GDD added",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));\npm.test(\"Unconfigured roles do not grant eligibility\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).every(a=>!a.authorizationEligible)).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 Update profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{profileEventId}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"occurredAt\": \"2026-08-05T12:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"New York\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-08-05T12:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GDD_Analyst\",\n        \"roleDescription\": \"GDD Analyst\",\n        \"assignedAt\": \"2026-07-30T11:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGddAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GDD Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 Remove all roles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{removeAllEventId}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"occurredAt\": \"2026-08-10T12:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-08-10T12:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11 Verify active employment without roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(0));\npm.test(\"Unconfigured roles do not grant eligibility\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).every(a=>!a.authorizationEligible)).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12 Terminate without profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{terminateEventId}}\",\n  \"eventType\": \"USER_TERMINATED\",\n  \"occurredAt\": \"2026-08-31T17:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"employmentStatus\": \"TERMINATED\",\n    \"terminationDate\": \"2026-08-31\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13 Verify termination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"TERMINATED\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(0));\npm.test(\"Unconfigured roles do not grant eligibility\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).every(a=>!a.authorizationEligible)).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14 Retained memberships cannot reactivate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{blockedUpdateEventId}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"occurredAt\": \"2026-07-30T11:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-30T11:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GDD_Analyst\",\n        \"roleDescription\": \"GDD Analyst\",\n        \"assignedAt\": \"2026-07-30T11:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGddAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GDD Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "15 Approved termination correction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{restoreEventId}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-09-02T09:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-09-02T09:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-09-02T09:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-09-02T09:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GDD_Analyst\",\n        \"roleDescription\": \"GDD Analyst\",\n        \"assignedAt\": \"2026-09-02T09:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGddAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GDD Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16 Verify approved restoration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));\npm.test(\"Unconfigured roles do not grant eligibility\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).every(a=>!a.authorizationEligible)).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17 Read applied event",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/ipass/events/{{restoreEventId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Applied event\",()=>pm.expect(pm.response.json().processingStatus).to.eql(\"APPLIED\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Validation failures",
+      "item": [
+        {
+          "name": "Manager is required",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-07-11T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": null,\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "eventVersion is unsupported",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-07-11T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": null,\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  },\n  \"eventVersion\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/actuator/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Contractor, wrongful termination, and genuine rehire",
+      "item": [
+        {
+          "name": "01 Provision VNDLY contractor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{cntProvisionId}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-07-11T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"VNDLY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"CONTRACTOR\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Contractor\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"employeeId\",\"PM-CNT-\"+pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"cntProvisionId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"cntTerminationId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"cntCorrectionId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"cntSecondTerminationId\",pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"cntRehireId\",pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 Verify contractor roles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
+                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 Terminate contractor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{cntTerminationId}}\",\n  \"eventType\": \"USER_TERMINATED\",\n  \"occurredAt\": \"2026-08-31T17:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"employmentStatus\": \"TERMINATED\",\n    \"terminationDate\": \"2026-08-31\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Verify terminated contractor",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const b=pm.response.json(); pm.test(\"Employment TERMINATED\",()=>pm.expect(b.employee.employment_status).to.eql(\"TERMINATED\"));",
+                  "pm.test(\"Current assignments 0\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 Correct wrongful termination",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{cntCorrectionId}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-09-02T09:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"VNDLY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"CONTRACTOR\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-09-02T09:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-09-02T09:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-09-02T09:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-09-02T09:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Contractor\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 Verify original employment restored",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
+                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 Later genuine contract termination",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{cntSecondTerminationId}}\",\n  \"eventType\": \"USER_TERMINATED\",\n  \"occurredAt\": \"2026-09-10T17:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"employmentStatus\": \"TERMINATED\",\n    \"terminationDate\": \"2026-09-10\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 New engagement with newly approved KYC role only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{cntRehireId}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-10-01T09:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"VNDLY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-10-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"CONTRACTOR\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-10-01T09:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-10-01T09:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Contractor\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 Verify rehire did not restore all historical roles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
+                  "pm.test(\"Current assignments 1\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Account isolation and shared role owners",
+      "item": [
+        {
+          "name": "01 Provision first account",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"occurredAt\": \"2026-07-11T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"employeeId\",\"PM-ACCT-\"+pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 Provision second account for same employee",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"occurredAt\": \"2026-07-11T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-secondary-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 Verify two accounts keep separate assignments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const b=pm.response.json();",
+                  "pm.test(\"Two accounts\",()=>pm.expect(b.accounts.length).to.eql(2));",
+                  "pm.test(\"Six current assignments\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(6));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Update shared KYC role owner",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"occurredAt\": \"2026-07-12T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdKycAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"OWNER-NEW\",\n            \"firstName\": \"Daniel\",\n            \"lastName\": \"Lee\",\n            \"email\": \"daniel.lee@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdGsiAnalyst001\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00gProdBkycAnalyst01\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false,\n        \"owners\": [\n          {\n            \"ownerId\": \"WU100310\",\n            \"firstName\": \"Priya\",\n            \"lastName\": \"Shah\",\n            \"email\": \"priya.shah@example.com\"\n          }\n        ]\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 Verify owner is shared across account assignments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const b=pm.response.json();",
+                  "const roles=b.accounts.flatMap(a=>a.assignments).filter(r=>r.roleName===\"APP_Pharos_Prod_KYC_Analyst\");",
+                  "pm.test(\"Both assignments see the role owner\",()=>pm.expect(roles.length===2 && roles.every(r=>r.owners.length===1 && r.owners[0].ownerId===\"OWNER-NEW\")).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 Remove first account roles only",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"occurredAt\": \"2026-07-12T14:00:00Z\",\n  \"environment\": \"Prod\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"employmentType\": \"FTE\",\n    \"superiorOrganization\": \"Western Union\",\n    \"organizationId\": \"ORG-FCC-101\",\n    \"country\": \"USA\",\n    \"region\": \"North America\",\n    \"site\": \"Denver\",\n    \"supervisoryOrganization\": \"Financial Crime Compliance\",\n    \"lastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\",\n      \"email\": \"maya.patel@example.com\",\n      \"displayName\": \"Maya Patel\"\n    },\n    \"iPassRoles\": [],\n    \"employeeClass\": \"Employee\",\n    \"account\": {\n      \"application\": \"Okta\",\n      \"accountId\": \"00u-{{employeeId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 Verify second account retains access assignments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const b=pm.response.json();",
+                  "pm.test(\"Three current assignments remain\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));",
+                  "pm.test(\"Second account retains all roles\",()=>pm.expect(b.accounts.find(a=>a.accountId.startsWith(\"00u-secondary-\")).assignments.filter(a=>a.assignmentStatus===\"PROVISIONED\").length).to.eql(3));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
