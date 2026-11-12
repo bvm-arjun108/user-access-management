@@ -40,7 +40,7 @@ class EmployeeLifecycleIT {
       throw new IllegalStateException("Integration tests require a dedicated database ending _test");
     }
     jdbc.execute(
-        "TRUNCATE pharos_uam.account_role_assignment,pharos_uam.ipass_role_owner,pharos_uam.okta_account,pharos_uam.employee,pharos_uam.ipass_role,pharos_uam."
+        "TRUNCATE pharos_uam.okta_account_role_assignment,pharos_uam.ipass_role_owner,pharos_uam.okta_account,pharos_uam.employee,pharos_uam.ipass_role,pharos_uam."
         + "ipass_event RESTART IDENTITY CASCADE");
     initial = (ObjectNode) mapper.readTree(getClass().getResourceAsStream("/provision.json"));
     initial.put("eventId", UUID.randomUUID().toString());
@@ -73,7 +73,7 @@ class EmployeeLifecycleIT {
   }
 
   private long active() {
-    return jdbc.queryForObject("SELECT count(*) FROM pharos_uam.account_role_assignment WHERE removed_at IS NULL", Long.class);
+    return jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment WHERE removed_at IS NULL", Long.class);
   }
 
   @Test
@@ -105,7 +105,7 @@ class EmployeeLifecycleIT {
     assertThat(post(termination()).status()).isEqualTo(200);
     assertThat(active()).isZero();
     assertThat(jdbc.queryForObject("SELECT employment_status FROM pharos_uam.employee", String.class)).isEqualTo("TERMINATED");
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.account_role_assignment", Long.class)).isEqualTo(4);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment", Long.class)).isEqualTo(4);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_role", Long.class)).isEqualTo(4);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_event WHERE processing_status='APPLIED'", Long.class)).isEqualTo(
         4);
@@ -157,7 +157,7 @@ class EmployeeLifecycleIT {
     roles.add(role);
     assertThat(post(reassign).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(1);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.account_role_assignment", Long.class)).isEqualTo(4);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment", Long.class)).isEqualTo(4);
   }
 
   @Test
@@ -236,9 +236,9 @@ class EmployeeLifecycleIT {
         + "SELECT role_id,owner_id,first_name,last_name,email FROM pharos_uam.ipass_role_owner LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThatThrownBy(() -> jdbc.update(
-        "INSERT INTO pharos_uam.account_role_assignment(account_id,role_id,application,environment,assigned_at,assignment_event_id) "
+        "INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,application,environment,assigned_at,assignment_event_id) "
         + "SELECT account_id,role_id,application,environment,assigned_at,assignment_event_id "
-        + "FROM pharos_uam.account_role_assignment WHERE removed_at IS NULL LIMIT 1"))
+        + "FROM pharos_uam.okta_account_role_assignment WHERE removed_at IS NULL LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThat(active()).isEqualTo(3);
   }
@@ -246,8 +246,8 @@ class EmployeeLifecycleIT {
   @Test
   void accountAndRoleEnvironmentAreEnforcedByDatabase() throws Exception {
     post(initial);
-    jdbc.update("UPDATE pharos_uam.account_role_assignment SET removed_at=now(),removal_event_id=assignment_event_id");
-    assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.account_role_assignment(account_id,role_id,application,environment,assigned_at,"
+    jdbc.update("UPDATE pharos_uam.okta_account_role_assignment SET removed_at=now(),removal_event_id=assignment_event_id");
+    assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,application,environment,assigned_at,"
         + "assignment_event_id) SELECT a.account_id,r.role_id,'Okta','UAT',now(),? FROM pharos_uam.okta_account a CROSS JOIN pharos_uam.ipass_role "
         + "r LIMIT 1", UUID.fromString(initial.get("eventId").asString())))
       .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
@@ -329,7 +329,7 @@ class EmployeeLifecycleIT {
     }
     assertThat(post(restore).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(3);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.account_role_assignment ar JOIN pharos_uam.okta_account a USING(account_id) WHERE a."
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment ar JOIN pharos_uam.okta_account a USING(account_id) WHERE a."
         + "okta_account_id='00u-second' AND ar.removed_at IS NULL", Long.class))
       .isZero();
   }

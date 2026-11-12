@@ -116,7 +116,7 @@ CREATE TABLE pharos_uam.ipass_event (
     )
 );
 
-CREATE TABLE pharos_uam.account_role_assignment (
+CREATE TABLE pharos_uam.okta_account_role_assignment (
 assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     account_id          UUID NOT NULL,
     role_id             UUID NOT NULL,
@@ -137,6 +137,6 @@ assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     )
 );
 
-CREATE UNIQUE INDEX uq_account_role_current ON pharos_uam.account_role_assignment(account_id,role_id) WHERE removed_at IS NULL;
+CREATE UNIQUE INDEX uq_account_role_current ON pharos_uam.okta_account_role_assignment(account_id,role_id) WHERE removed_at IS NULL;
 
 COMMIT;

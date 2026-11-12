@@ -70,7 +70,7 @@ The test database runs the same startup DDL automatically when initialized. Test
 
 ## Account and role metadata
 
-Six tables: employee, okta_account, ipass_role, ipass_role_owner, account_role_assignment and ipass_event. An account is uniquely identified by application/environment/oktaAccountId and cannot move to another employee. Entitlements are uniquely identified by application/environment/entitlementValue. The previous pharosRoles and source roleId fields are not accepted; use iPassRoles and entitlementValue.
+Six tables: employee, okta_account, ipass_role, ipass_role_owner, okta_account_role_assignment and ipass_event. An account is uniquely identified by application/environment/oktaAccountId and cannot move to another employee. Entitlements are uniquely identified by application/environment/entitlementValue. The previous pharosRoles and source roleId fields are not accepted; use iPassRoles and entitlementValue.
 
 Each supplied role carries a complete owners list. [] clears owners; missing/null is invalid. Owners belong to shared role definitions, not assignments. Role removal never deletes owners. iPass must provide current role metadata when sending or manually retriggering a snapshot; shared metadata is applied in processing order without independent role versioning.
 

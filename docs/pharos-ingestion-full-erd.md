@@ -5,11 +5,11 @@ All columns and PostgreSQL types match the fresh-install DDL. PK = primary key; 
 ```mermaid
 erDiagram
     EMPLOYEE ||--o{ OKTA_ACCOUNT : has
-    OKTA_ACCOUNT ||--o{ ACCOUNT_ROLE_ASSIGNMENT : receives
-    IPASS_ROLE ||--o{ ACCOUNT_ROLE_ASSIGNMENT : assigned_as
+    OKTA_ACCOUNT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : receives
+    IPASS_ROLE ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : assigned_as
     IPASS_ROLE ||--o{ IPASS_ROLE_OWNER : owned_by
-    IPASS_EVENT ||--o{ ACCOUNT_ROLE_ASSIGNMENT : creates
-    IPASS_EVENT o|--o{ ACCOUNT_ROLE_ASSIGNMENT : removes
+    IPASS_EVENT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : creates
+    IPASS_EVENT o|--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : removes
 
     EMPLOYEE {
         text employee_id PK "Required"
@@ -92,7 +92,7 @@ erDiagram
         text error_message "Nullable"
     }
 
-    ACCOUNT_ROLE_ASSIGNMENT {
+    OKTA_ACCOUNT_ROLE_ASSIGNMENT {
         uuid assignment_id PK "Required"
         uuid account_id FK "Required"
         uuid role_id FK "Required"

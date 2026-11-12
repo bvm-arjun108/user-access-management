@@ -10,7 +10,7 @@ Pharos receives one employee and one account's complete approved role list per e
 | okta_account | Employee's Okta account for an application/environment | account_id: database-generated UUID | UNIQUE(application, environment, okta_account_id) |
 | ipass_role | Shared iPass role details | role_id: database-generated UUID | UNIQUE(application, environment, entitlement_value) |
 | ipass_role_owner | Current owners of a shared role | (role_id, owner_id) | Same owner cannot appear twice for the same role |
-| account_role_assignment | Current and past account-role assignments | assignment_id: database-generated UUID | Only one open assignment per (account_id, role_id), where removed_at is null |
+| okta_account_role_assignment | Current and past account-role assignments | assignment_id: database-generated UUID | Only one open assignment per (account_id, role_id), where removed_at is null |
 | ipass_event | Submitted JSON and latest processing result | event_id: UUID from iPass | One row per event_id; identical retries do not repeat changes |
 
 The account and role tables also have scope uniqueness constraints used by foreign keys. These ensure an assignment's application/environment matches both its account and role.
@@ -20,11 +20,11 @@ The account and role tables also have scope uniqueness constraints used by forei
 ~~~mermaid
 erDiagram
     EMPLOYEE ||--o{ OKTA_ACCOUNT : has
-    OKTA_ACCOUNT ||--o{ ACCOUNT_ROLE_ASSIGNMENT : receives
-    IPASS_ROLE ||--o{ ACCOUNT_ROLE_ASSIGNMENT : assigned_as
+    OKTA_ACCOUNT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : receives
+    IPASS_ROLE ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : assigned_as
     IPASS_ROLE ||--o{ IPASS_ROLE_OWNER : has_owners
-    IPASS_EVENT ||--o{ ACCOUNT_ROLE_ASSIGNMENT : starts
-    IPASS_EVENT o|--o{ ACCOUNT_ROLE_ASSIGNMENT : closes
+    IPASS_EVENT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : starts
+    IPASS_EVENT o|--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : closes
 ~~~
 
 Managers are stored directly in employee. Role owners do not need employee records. Event employee/account identifiers are not foreign keys because an event can arrive before those records exist.
@@ -47,7 +47,7 @@ Assignments and owners reference the internal UUIDs. Updating an existing accoun
 | Okta | UAT | 00u9j4n6p8Q3rStUv0h7 | APP_Pharos_UAT_KYC_Analyst |
 | Okta | Prod | 00u7h2m4p6R8sTuVw0h7 | APP_Pharos_Prod_KYC_Analyst |
 
-Dev and QA can share the Okta ID because environment is part of uniqueness. Another Okta/Dev row with that same ID is rejected. Multiple employees can share a role definition through separate account_role_assignment rows.
+Dev and QA can share the Okta ID because environment is part of uniqueness. Another Okta/Dev row with that same ID is rejected. Multiple employees can share a role definition through separate okta_account_role_assignment rows.
 
 These fictional rows illustrate separate environment deployments. Currently Dev, UAT and Prod are supported; QA still needs implementation.
 
