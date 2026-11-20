@@ -1,15 +1,14 @@
-# Pharos ingestion ER diagram
+# Pharos UAM ER diagram
 
-All columns and PostgreSQL types match the fresh-install DDL. PK = primary key; FK = foreign key. Profile columns are conditionally required for ACTIVE employees.
+Five tables; all 65 columns match the DDL. PK = primary key; FK = foreign key. Physical nullability is conditional for ACTIVE employee profiles. Email is optional.
 
 ```mermaid
 erDiagram
-    EMPLOYEE ||--o{ OKTA_ACCOUNT : has
-    OKTA_ACCOUNT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : receives
-    IPASS_ROLE ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : assigned_as
-    IPASS_ROLE ||--o{ IPASS_ROLE_OWNER : owned_by
-    IPASS_EVENT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : creates
-    IPASS_EVENT o|--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : removes
+    EMPLOYEE ||--o{ OKTA_ACCOUNT : "employee_id"
+    OKTA_ACCOUNT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "account_id + application + environment"
+    IPASS_ROLE ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "role_id + application + environment"
+    IPASS_EVENT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "assignment_event_id"
+    IPASS_EVENT o|--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "removal_event_id"
 
     EMPLOYEE {
         text employee_id PK "Required"
@@ -17,8 +16,8 @@ erDiagram
         text first_name "Required when ACTIVE"
         text middle_name "Nullable"
         text last_name "Required when ACTIVE"
-        text email "Required when ACTIVE"
-        text employment_status "Required"
+        text email "Nullable"
+        text employment_status "Required when ACTIVE"
         date hire_date "Required when ACTIVE"
         date termination_date "Nullable"
         text employee_class "Required when ACTIVE"
@@ -30,10 +29,7 @@ erDiagram
         text site "Required when ACTIVE"
         text supervisory_organization "Required when ACTIVE"
         text manager_employee_id "Required when ACTIVE"
-        text manager_first_name "Required when ACTIVE"
-        text manager_middle_name "Nullable"
-        text manager_last_name "Required when ACTIVE"
-        text manager_email "Required when ACTIVE"
+        text manager_name "Required when ACTIVE"
         timestamptz employee_last_synced_at "Required when ACTIVE"
         timestamptz created_at "Required"
         timestamptz updated_at "Required"
@@ -61,16 +57,6 @@ erDiagram
         boolean is_pharos_group "Required"
         boolean is_available_for_request "Required"
         boolean is_privileged "Required"
-        timestamptz created_at "Required"
-        timestamptz updated_at "Required"
-    }
-
-    IPASS_ROLE_OWNER {
-        uuid role_id PK,FK "Required"
-        text owner_id PK "Required"
-        text first_name "Required"
-        text last_name "Required"
-        text email "Required"
         timestamptz created_at "Required"
         timestamptz updated_at "Required"
     }
@@ -105,24 +91,6 @@ erDiagram
     }
 ```
 
-## Keys and scope
+Account uniqueness: application + environment + okta_account_id. Role uniqueness: application + environment + entitlement_value. One open assignment per account/role.
 
-- Account source key: application + environment + okta_account_id.
-- Role source key: application + environment + entitlement_value.
-- Owner key: role_id + owner_id. Owners need not have employee accounts.
-- Current assignment: removed_at IS NULL; one per account/role. Role and account must match application/environment through composite foreign keys.
-- Internal account_id, role_id and assignment_id are database-generated UUIDs; they are not payload fields.
-- Event UUID is supplied by iPass. Event employee/account identifiers are not foreign keys because receipt can precede entity creation.
-- Termination affects the employee and every linked account in the deployment. Normal snapshots affect only their account.
-
-## Example identifiers
-
-All identifiers below are fictional. Internal keys are database-generated UUIDs; source identifiers are opaque strings from iPass.
-
-| Table | Internal key | Source identifier | Scope |
-| --- | --- | --- | --- |
-| okta_account | account_id = b6d27ea0-f56a-4a7e-8df2-26a849b6c430 | okta_account_id = 00u8k3m5n7P2qRsTu0h7 | Okta / Prod |
-| ipass_role | role_id = 19c852d7-e483-49f8-93b6-63fe09fc1ea4 | entitlement_value = 00g8n4q2r6T9vWxYz0h7 | Okta / Prod |
-| ipass_role | role_id = 832ebfac-b653-4719-a124-e6f1026c58f9 | entitlement_value = 00g9p5s3u7V2xYaBc0h7 | Okta / Prod |
-
-The KYC role is named APP_Pharos_Prod_KYC_Analyst; the GSI role is APP_Pharos_Prod_GSI_Analyst. Assignment rows reference account_id b6d27ea0-f56a-4a7e-8df2-26a849b6c430 and role_id 19c852d7-e483-49f8-93b6-63fe09fc1ea4 or 832ebfac-b653-4719-a124-e6f1026c58f9. iPass sends the source identifiers, never these internal UUIDs. Source identifiers do not encode the employee, role name, or environment.
+Source Owner ID/First/Last describe the employee. No role-owner data is supplied. Manager ID and full name are stored directly in employee.

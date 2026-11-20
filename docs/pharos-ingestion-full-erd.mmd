@@ -1,10 +1,9 @@
 erDiagram
-    EMPLOYEE ||--o{ OKTA_ACCOUNT : has
-    OKTA_ACCOUNT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : receives
-    IPASS_ROLE ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : assigned_as
-    IPASS_ROLE ||--o{ IPASS_ROLE_OWNER : owned_by
-    IPASS_EVENT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : creates
-    IPASS_EVENT o|--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : removes
+    EMPLOYEE ||--o{ OKTA_ACCOUNT : "employee_id"
+    OKTA_ACCOUNT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "account_id + application + environment"
+    IPASS_ROLE ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "role_id + application + environment"
+    IPASS_EVENT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "assignment_event_id"
+    IPASS_EVENT o|--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "removal_event_id"
 
     EMPLOYEE {
         text employee_id PK "Required"
@@ -12,8 +11,8 @@ erDiagram
         text first_name "Required when ACTIVE"
         text middle_name "Nullable"
         text last_name "Required when ACTIVE"
-        text email "Required when ACTIVE"
-        text employment_status "Required"
+        text email "Nullable"
+        text employment_status "Required when ACTIVE"
         date hire_date "Required when ACTIVE"
         date termination_date "Nullable"
         text employee_class "Required when ACTIVE"
@@ -25,10 +24,7 @@ erDiagram
         text site "Required when ACTIVE"
         text supervisory_organization "Required when ACTIVE"
         text manager_employee_id "Required when ACTIVE"
-        text manager_first_name "Required when ACTIVE"
-        text manager_middle_name "Nullable"
-        text manager_last_name "Required when ACTIVE"
-        text manager_email "Required when ACTIVE"
+        text manager_name "Required when ACTIVE"
         timestamptz employee_last_synced_at "Required when ACTIVE"
         timestamptz created_at "Required"
         timestamptz updated_at "Required"
@@ -56,16 +52,6 @@ erDiagram
         boolean is_pharos_group "Required"
         boolean is_available_for_request "Required"
         boolean is_privileged "Required"
-        timestamptz created_at "Required"
-        timestamptz updated_at "Required"
-    }
-
-    IPASS_ROLE_OWNER {
-        uuid role_id PK,FK "Required"
-        text owner_id PK "Required"
-        text first_name "Required"
-        text last_name "Required"
-        text email "Required"
         timestamptz created_at "Required"
         timestamptz updated_at "Required"
     }

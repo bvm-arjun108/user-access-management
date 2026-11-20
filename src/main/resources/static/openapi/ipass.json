@@ -25,7 +25,7 @@
         ],
         "operationId": "processEmployeeEvent",
         "summary": "Send employee details and current Pharos roles",
-        "description": "Send one employee/account snapshot for one environment. Only approved, effective Pharos roles belong in iPassRoles.\n\n- Include all employee fields, account, manager and iPassRoles for provisioning/updates. Middle names may be null; terminationDate must be null while ACTIVE.\n- Account IDs and entitlement values are scoped by application and environment. An existing account cannot be reassigned to another employee.\n- Omitted roles are revoked from the specified account only. Missing/null iPassRoles is invalid; [] removes all account assignments.\n- Owners are shared role metadata. Send their complete list; [] clears it. Removing an assignment never removes a role or its owners.\n- Flags are JSON booleans. Requestability and privilege flags do not grant or revoke access by themselves.\n- Changing a known entitlement's roleName requires review and returns 409.\n- Termination needs only employeeId and TERMINATED status, plus terminationDate when known. It closes assignments for every linked account in this deployment, regardless of the 15-day iPass cleanup. Optional role/profile content does not restore access.\n- Approved USER_PROVISIONED is required after termination. Only assignments explicitly supplied for that account are restored.\n- New event: new UUID. Identical retry: same UUID and payload. Retry failures with the same event; use a new UUID for corrected content. Source deliveries must stay in order.",
+        "description": "Send one employee/account snapshot for one environment. Only approved, effective Pharos roles belong in iPassRoles.\n\n- Include all employee fields, account, manager and iPassRoles for provisioning/updates. Middle names may be null; terminationDate must be null while ACTIVE.\n- Account IDs and entitlement values are scoped by application and environment. An existing account cannot be reassigned to another employee.\n- Omitted roles are revoked from the specified account only. Missing/null iPassRoles is invalid; [] removes all account assignments.\n- Flags are JSON booleans. Requestability and privilege flags do not grant or revoke access by themselves.\n- Changing a known entitlement's roleName requires review and returns 409.\n- Termination needs only employeeId and TERMINATED status, plus terminationDate when known. It closes assignments for every linked account in this deployment, regardless of the 15-day iPass cleanup. Optional role/profile content does not restore access.\n- Approved USER_PROVISIONED is required after termination. Only assignments explicitly supplied for that account are restored.\n- New event: new UUID. Identical retry: same UUID and payload. Retry failures with the same event; use a new UUID for corrected content. Source deliveries must stay in order.",
         "requestBody": {
           "required": true,
           "content": {
@@ -61,10 +61,7 @@
                       "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -77,15 +74,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_GSI_Analyst",
@@ -97,15 +86,7 @@
                           "displayName": "GSI Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -117,15 +98,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -163,10 +136,7 @@
                       "employeeLastSyncedAt": "2026-07-17T10:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -179,15 +149,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -199,15 +161,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -245,10 +199,7 @@
                       "employeeLastSyncedAt": "2026-07-30T11:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -261,15 +212,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -281,15 +224,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_GDD_Analyst",
@@ -301,15 +236,7 @@
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -361,10 +288,7 @@
                       "employeeLastSyncedAt": "2026-09-02T09:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -377,15 +301,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -397,15 +313,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_GDD_Analyst",
@@ -417,15 +325,7 @@
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -463,10 +363,7 @@
                       "employeeLastSyncedAt": "2026-09-02T09:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -479,15 +376,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -525,10 +414,7 @@
                       "employeeLastSyncedAt": "2026-08-10T12:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [],
                       "employeeClass": "Employee",
@@ -566,10 +452,7 @@
                       "employeeLastSyncedAt": "2026-08-05T12:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -582,15 +465,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -602,15 +477,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_GDD_Analyst",
@@ -622,15 +489,7 @@
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -668,10 +527,7 @@
                       "employeeLastSyncedAt": "2026-08-12T12:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -684,15 +540,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -730,10 +578,7 @@
                       "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -746,15 +591,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_GSI_Analyst",
@@ -766,15 +603,7 @@
                           "displayName": "GSI Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -786,15 +615,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Contractor",
@@ -832,10 +653,7 @@
                       "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -848,15 +666,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_GSI_Analyst",
@@ -868,15 +678,7 @@
                           "displayName": "GSI Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -888,15 +690,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -934,10 +728,7 @@
                       "employeeLastSyncedAt": "2026-07-30T11:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -950,15 +741,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -970,15 +753,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_GDD_Analyst",
@@ -990,15 +765,7 @@
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -1009,8 +776,8 @@
                     }
                   }
                 },
-                "13-role-owners-update": {
-                  "summary": "13 role owners update",
+                "13-role-metadata-update": {
+                  "summary": "13 role metadata update",
                   "value": {
                     "eventId": "a9c22b4b-b706-4012-aea1-13b8b36e4cce",
                     "eventType": "USER_UPDATED",
@@ -1036,10 +803,7 @@
                       "employeeLastSyncedAt": "2026-07-30T11:00:00Z",
                       "manager": {
                         "employeeId": "WU100210",
-                        "firstName": "Maya",
-                        "middleName": "R",
-                        "lastName": "Patel",
-                        "email": "maya.patel@example.com"
+                        "name": "Maya R Patel"
                       },
                       "iPassRoles": [
                         {
@@ -1052,15 +816,7 @@
                           "displayName": "KYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100311",
-                              "firstName": "Daniel",
-                              "lastName": "Lee",
-                              "email": "daniel.lee@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_BKYC_Analyst",
@@ -1072,15 +828,7 @@
                           "displayName": "BKYC Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         },
                         {
                           "roleName": "APP_Pharos_Prod_GDD_Analyst",
@@ -1092,15 +840,7 @@
                           "displayName": "GDD Analyst",
                           "isPharosGroup": true,
                           "isAvailableForRequest": true,
-                          "isPrivileged": false,
-                          "owners": [
-                            {
-                              "ownerId": "WU100310",
-                              "firstName": "Priya",
-                              "lastName": "Shah",
-                              "email": "priya.shah@example.com"
-                            }
-                          ]
+                          "isPrivileged": false
                         }
                       ],
                       "employeeClass": "Employee",
@@ -1390,7 +1130,6 @@
               "firstName",
               "middleName",
               "lastName",
-              "email",
               "employmentStatus",
               "hireDate",
               "terminationDate",
@@ -1437,7 +1176,8 @@
               "email": {
                 "type": "string",
                 "format": "email",
-                "description": "Employee business email."
+                "description": "Employee contact email supplied by iPass; null or omitted when unavailable. No home-email fallback.",
+                "nullable": true
               },
               "employmentStatus": {
                 "type": "string",
@@ -1496,33 +1236,17 @@
                 "additionalProperties": false,
                 "required": [
                   "employeeId",
-                  "firstName",
-                  "middleName",
-                  "lastName",
-                  "email"
+                  "name"
                 ],
                 "properties": {
                   "employeeId": {
                     "type": "string",
                     "description": "Manager employee ID."
                   },
-                  "firstName": {
+                  "name": {
                     "type": "string",
-                    "description": "Manager first name."
-                  },
-                  "middleName": {
-                    "type": "string",
-                    "nullable": true,
-                    "description": "Manager middle name; null if none."
-                  },
-                  "lastName": {
-                    "type": "string",
-                    "description": "Manager last name."
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "Manager business email."
+                    "minLength": 1,
+                    "description": "Full manager name supplied by iPass."
                   }
                 },
                 "nullable": false,
@@ -1599,7 +1323,6 @@
               "firstName",
               "middleName",
               "lastName",
-              "email",
               "employmentStatus",
               "hireDate",
               "terminationDate",
@@ -1646,7 +1369,8 @@
               "email": {
                 "type": "string",
                 "format": "email",
-                "description": "Employee business email."
+                "description": "Employee contact email supplied by iPass; null or omitted when unavailable. No home-email fallback.",
+                "nullable": true
               },
               "employmentStatus": {
                 "type": "string",
@@ -1705,33 +1429,17 @@
                 "additionalProperties": false,
                 "required": [
                   "employeeId",
-                  "firstName",
-                  "middleName",
-                  "lastName",
-                  "email"
+                  "name"
                 ],
                 "properties": {
                   "employeeId": {
                     "type": "string",
                     "description": "Manager employee ID."
                   },
-                  "firstName": {
+                  "name": {
                     "type": "string",
-                    "description": "Manager first name."
-                  },
-                  "middleName": {
-                    "type": "string",
-                    "nullable": true,
-                    "description": "Manager middle name; null if none."
-                  },
-                  "lastName": {
-                    "type": "string",
-                    "description": "Manager last name."
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "Manager business email."
+                    "minLength": 1,
+                    "description": "Full manager name supplied by iPass."
                   }
                 },
                 "nullable": false,
@@ -1824,7 +1532,8 @@
                 "description": "Optional on termination. Not validated or used to update the employee profile."
               },
               "email": {
-                "description": "Optional on termination. Not validated or used to update the employee profile."
+                "description": "Employee contact email supplied by iPass; null or omitted when unavailable. No home-email fallback.",
+                "nullable": true
               },
               "employmentStatus": {
                 "type": "string",
@@ -2008,37 +1717,6 @@
         },
         "description": "Account whose complete role list is supplied."
       },
-      "RoleOwner": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "ownerId",
-          "firstName",
-          "lastName",
-          "email"
-        ],
-        "properties": {
-          "ownerId": {
-            "type": "string",
-            "description": "Source owner identifier; the owner need not have a Pharos account.",
-            "maxLength": 128
-          },
-          "firstName": {
-            "type": "string",
-            "description": "Owner first name."
-          },
-          "lastName": {
-            "type": "string",
-            "description": "Owner last name."
-          },
-          "email": {
-            "type": "string",
-            "description": "Owner email.",
-            "format": "email"
-          }
-        },
-        "description": "Owner of the shared role, not the employee receiving it."
-      },
       "IPassRole": {
         "type": "object",
         "additionalProperties": false,
@@ -2051,7 +1729,6 @@
           "isPharosGroup",
           "isAvailableForRequest",
           "isPrivileged",
-          "owners",
           "assignedAt",
           "assignmentStatus"
         ],
@@ -2092,14 +1769,6 @@
           "isPrivileged": {
             "type": "boolean",
             "description": "Role metadata under the agreed payload shape; does not grant permissions. Confirm its source meaning with iPass."
-          },
-          "owners": {
-            "type": "array",
-            "maxItems": 100,
-            "items": {
-              "$ref": "#/components/schemas/RoleOwner"
-            },
-            "description": "Complete current owner list for the role. [] clears owners. Missing/null is invalid. ownerId must be unique within the list."
           },
           "assignedAt": {
             "type": "string",

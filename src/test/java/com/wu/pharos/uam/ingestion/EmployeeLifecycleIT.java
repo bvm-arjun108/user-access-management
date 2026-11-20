@@ -40,7 +40,7 @@ class EmployeeLifecycleIT {
       throw new IllegalStateException("Integration tests require a dedicated database ending _test");
     }
     jdbc.execute(
-        "TRUNCATE pharos_uam.okta_account_role_assignment,pharos_uam.ipass_role_owner,pharos_uam.okta_account,pharos_uam.employee,pharos_uam.ipass_role,pharos_uam."
+        "TRUNCATE pharos_uam.okta_account_role_assignment,pharos_uam.okta_account,pharos_uam.employee,pharos_uam.ipass_role,pharos_uam."
         + "ipass_event RESTART IDENTITY CASCADE");
     initial = (ObjectNode) mapper.readTree(getClass().getResourceAsStream("/provision.json"));
     initial.put("eventId", UUID.randomUUID().toString());
@@ -252,7 +252,7 @@ class EmployeeLifecycleIT {
   }
 
   @Test
-  void databaseRejectsDuplicateAccountsRolesOwnersAndCurrentAssignments() throws Exception {
+  void databaseRejectsDuplicateAccountsRolesAndCurrentAssignments() throws Exception {
     assertThat(post(initial).status()).isEqualTo(200);
     assertThatThrownBy(() -> jdbc.update(
         "INSERT INTO pharos_uam.okta_account(employee_id,application,environment,okta_account_id) "
@@ -263,10 +263,6 @@ class EmployeeLifecycleIT {
         + "role_description,is_pharos_group,is_available_for_request,is_privileged) "
         + "SELECT application,environment,entitlement_value,entitlement_type,role_name,display_name,"
         + "role_description,is_pharos_group,is_available_for_request,is_privileged FROM pharos_uam.ipass_role LIMIT 1"))
-      .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
-    assertThatThrownBy(() -> jdbc.update(
-        "INSERT INTO pharos_uam.ipass_role_owner(role_id,owner_id,first_name,last_name,email) "
-        + "SELECT role_id,owner_id,first_name,last_name,email FROM pharos_uam.ipass_role_owner LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThatThrownBy(() -> jdbc.update(
         "INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,application,environment,assigned_at,assignment_event_id) "
@@ -314,37 +310,26 @@ class EmployeeLifecycleIT {
   }
 
   @Test
-  void ownersAndFlagsAreSharedRoleMetadataNotAccessGrants() throws Exception {
+  void flagsAreSharedRoleMetadataNotAccessGrants() throws Exception {
     post(initial);
     ObjectNode update = next("USER_UPDATED");
     ObjectNode role = (ObjectNode) update.get("user").get("iPassRoles").get(0);
     role.put("isAvailableForRequest", false).put("isPrivileged", true);
-    role
-      .putArray("owners")
-      .add(mapper
-        .createObjectNode()
-        .put("ownerId", "ROLE-OWNER-NEW")
-        .put("firstName", "Elena")
-        .put("lastName", "Garcia")
-        .put("email", "elena@example.com"));
     assertThat(post(update).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(3);
-    assertThat(jdbc.queryForObject("SELECT owner_id FROM pharos_uam.ipass_role_owner o JOIN pharos_uam.ipass_role r USING(role_id) WHERE r."
-        + "entitlement_value='00g8n4q2r6T9vWxYz0h7'", String.class))
-      .isEqualTo("ROLE-OWNER-NEW");
     assertThat(jdbc.queryForObject("SELECT is_privileged FROM pharos_uam.ipass_role WHERE entitlement_value='00g8n4q2r6T9vWxYz0h7'",
         Boolean.class))
       .isTrue();
   }
 
   @Test
-  void removedAssignmentsNeverDeleteRoleOwners() throws Exception {
+  void removedAssignmentsNeverDeleteSharedRoles() throws Exception {
     post(initial);
     ObjectNode update = next("USER_UPDATED");
     ((ObjectNode) update.get("user")).putArray("iPassRoles");
     post(update);
     assertThat(active()).isZero();
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_role_owner", Long.class)).isEqualTo(3);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_role", Long.class)).isEqualTo(3);
   }
 
   @Test
@@ -378,7 +363,7 @@ class EmployeeLifecycleIT {
   }
 
   @Test
-  void employeeReadIncludesAccountsEntitlementsAndOwners() throws Exception {
+  void employeeReadIncludesAccountsAndEntitlements() throws Exception {
     post(initial);
     var response = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482")).GET().build(),
         HttpResponse.BodyHandlers.ofString());
@@ -391,7 +376,8 @@ class EmployeeLifecycleIT {
     assertThat(jdbc.queryForObject("SELECT account_id FROM pharos_uam.okta_account LIMIT 1", UUID.class)).isNotNull();
     assertThat(jdbc.queryForObject("SELECT role_id FROM pharos_uam.ipass_role LIMIT 1", UUID.class)).isNotNull();
     assertThat(response.body()).doesNotContain("permissionMappingStatus", "authorizationEligible", "permission_mapping_status");
-    assertThat(account.get("assignments").get(0).get("owners").size()).isEqualTo(1);
+    assertThat(account.get("assignments").get(0).has("owners")).isFalse();
+    assertThat(body.get("employee").get("manager_name").asString()).isEqualTo("Maya R Patel");
     assertThat(body.get("employee").get("employee_class").asString()).isEqualTo("Employee");
     assertThat(body.get("employee").has("manager_display_name")).isFalse();
   }
@@ -417,20 +403,34 @@ class EmployeeLifecycleIT {
       .isZero();
     assertThat(post(initial).status()).isEqualTo(200);
     String times =
-        "SELECT e.updated_at,a.updated_at,r.updated_at,o.updated_at FROM pharos_uam.employee e JOIN pharos_uam.okta_account a "
-        + "USING(employee_id) JOIN pharos_uam.ipass_role r ON r.application=a.application AND r.environment=a.environment JOIN pharos_uam."
-        + "ipass_role_owner o USING(role_id) WHERE r.entitlement_value='00g8n4q2r6T9vWxYz0h7'";
+        "SELECT e.updated_at,a.updated_at,r.updated_at FROM pharos_uam.employee e JOIN pharos_uam.okta_account a "
+        + "USING(employee_id) JOIN pharos_uam.ipass_role r ON r.application=a.application AND r.environment=a.environment "
+        + "WHERE r.entitlement_value='00g8n4q2r6T9vWxYz0h7'";
     var before = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant(),
-        rs.getTimestamp(3).toInstant(), rs.getTimestamp(4).toInstant()));
+        rs.getTimestamp(3).toInstant()));
     ObjectNode update = next("USER_UPDATED");
     ((ObjectNode) update.get("user")).put("site", "New York");
     assertThat(post(update).status()).isEqualTo(200);
     var after = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant(),
-        rs.getTimestamp(3).toInstant(), rs.getTimestamp(4).toInstant()));
-    for (int j = 0; j < 4; j++) {
+        rs.getTimestamp(3).toInstant()));
+    for (int j = 0; j < 3; j++) {
       assertThat(after.get(j)).isAfter(before.get(j));
     }
     assertThat(post(termination()).status()).isEqualTo(200);
     assertThat(jdbc.queryForObject("SELECT updated_at FROM pharos_uam.employee", java.sql.Timestamp.class).toInstant()).isAfter(after.get(0));
+  }
+
+  @Test
+  void contractorWithoutEmailAndUnsplitManagerNameIsPersisted() throws Exception {
+    ObjectNode user = (ObjectNode) initial.get("user");
+    user.put("sourceSystem", "VNDLY").put("employmentType", "CONTRACTOR").put("employeeClass", "Contractor").putNull("email");
+    ((ObjectNode) user.get("manager")).put("name", "Maya van der Patel");
+    assertThat(post(initial).status()).isEqualTo(200);
+    assertThat(jdbc.queryForObject("SELECT email FROM pharos_uam.employee", String.class)).isNull();
+    assertThat(jdbc.queryForObject("SELECT manager_name FROM pharos_uam.employee", String.class)).isEqualTo("Maya van der Patel");
+    ObjectNode update = next("USER_UPDATED");
+    ((ObjectNode) update.get("user")).remove("email");
+    assertThat(post(update).status()).isEqualTo(200);
+    assertThat(jdbc.queryForObject("SELECT email FROM pharos_uam.employee", String.class)).isNull();
   }
 }

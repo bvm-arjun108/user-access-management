@@ -1,6 +1,6 @@
 # Database schema
 
-`01_create_schema.sql` creates all six tables and their integrity constraints. There are no triggers or stored functions. Only primary-key/unique-constraint indexes and the unique current-assignment index are retained. The application SQL maintains updated_at.
+`01_create_schema.sql` creates all five tables and their integrity constraints. There are no triggers or stored functions. Only primary-key/unique-constraint indexes and the unique current-assignment index are retained. The application SQL maintains updated_at.
 
 Compose mounts this folder into `/docker-entrypoint-initdb.d`. PostgreSQL runs the SQL files in filename order when initializing an empty database.
 

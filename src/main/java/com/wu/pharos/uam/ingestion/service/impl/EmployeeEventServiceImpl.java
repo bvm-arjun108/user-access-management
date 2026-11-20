@@ -84,7 +84,6 @@ public class EmployeeEventServiceImpl implements EmployeeEventService {
       roles.sort(java.util.Comparator.comparing(r -> r.get("entitlementValue").asString()));
       for (JsonNode role : roles) {
         var storedRole = repository.upsertRole(role, event);
-        repository.saveOwners(storedRole.id(), role.get("owners"));
         repository.retainOrCreateAssignment(event, account, storedRole.id(), role);
       }
       repository.reconcile(event, account);

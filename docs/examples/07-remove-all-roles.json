@@ -23,10 +23,7 @@
     "employeeLastSyncedAt": "2026-08-10T12:00:00Z",
     "manager": {
       "employeeId": "WU100210",
-      "firstName": "Maya",
-      "middleName": "R",
-      "lastName": "Patel",
-      "email": "maya.patel@example.com"
+      "name": "Maya R Patel"
     },
     "iPassRoles": [],
     "employeeClass": "Employee",

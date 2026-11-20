@@ -22,10 +22,7 @@ CREATE TABLE pharos_uam.employee (
     site                        TEXT CHECK (btrim(site) <> ''),
     supervisory_organization    TEXT CHECK (btrim(supervisory_organization) <> ''),
     manager_employee_id         TEXT CHECK (btrim(manager_employee_id) <> ''),
-    manager_first_name          TEXT CHECK (btrim(manager_first_name) <> ''),
-    manager_middle_name         TEXT,
-    manager_last_name           TEXT CHECK (btrim(manager_last_name) <> ''),
-    manager_email               TEXT CHECK (btrim(manager_email) <> ''),
+    manager_name                TEXT CHECK (btrim(manager_name) <> ''),
     employee_last_synced_at       TIMESTAMPTZ,
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
@@ -35,13 +32,12 @@ CREATE TABLE pharos_uam.employee (
     CONSTRAINT ck_active_employee CHECK (
         employment_status <> 'ACTIVE' OR (
             termination_date IS NULL AND source_system IS NOT NULL
-            AND first_name IS NOT NULL AND last_name IS NOT NULL AND email IS NOT NULL
+            AND first_name IS NOT NULL AND last_name IS NOT NULL
             AND hire_date IS NOT NULL AND employment_type IS NOT NULL AND employee_class IS NOT NULL
             AND superior_organization IS NOT NULL AND organization_id IS NOT NULL
             AND country IS NOT NULL AND region IS NOT NULL AND site IS NOT NULL
             AND supervisory_organization IS NOT NULL AND employee_last_synced_at IS NOT NULL
-            AND manager_employee_id IS NOT NULL AND manager_first_name IS NOT NULL
-            AND manager_last_name IS NOT NULL AND manager_email IS NOT NULL
+            AND manager_employee_id IS NOT NULL AND manager_name IS NOT NULL
         )
     )
 );
@@ -75,17 +71,6 @@ role_id             UUID DEFAULT gen_random_uuid() CONSTRAINT pk_role PRIMARY KE
     CONSTRAINT uq_role_entitlement UNIQUE(application,environment,entitlement_value),
     CONSTRAINT uq_role_scope UNIQUE(role_id,application,environment),
     CONSTRAINT ck_role_name_scope CHECK (starts_with(role_name,'APP_Pharos_' || environment || '_'))
-);
-
-CREATE TABLE pharos_uam.ipass_role_owner (
-role_id             UUID NOT NULL REFERENCES pharos_uam.ipass_role(role_id) ON DELETE RESTRICT,
-    owner_id            TEXT NOT NULL CHECK (btrim(owner_id) <> ''),
-    first_name          TEXT NOT NULL CHECK (btrim(first_name) <> ''),
-    last_name           TEXT NOT NULL CHECK (btrim(last_name) <> ''),
-    email               TEXT NOT NULL CHECK (btrim(email) <> ''),
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    PRIMARY KEY(role_id,owner_id)
 );
 
 CREATE TABLE pharos_uam.ipass_event (

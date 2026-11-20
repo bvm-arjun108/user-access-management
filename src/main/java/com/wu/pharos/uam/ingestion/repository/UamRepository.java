@@ -86,15 +86,13 @@ public class UamRepository {
         {"organizationId", "organization_id"}, {"country", "country"}, {"region", "region"},
         {"site", "site"}, {"supervisoryOrganization", "supervisory_organization"}};
     for (String[] field : fields) {
-      p.put(field[1], u.get(field[0]).isNull() ? null : u.get(field[0]).asString());
+      p.put(field[1], !u.hasNonNull(field[0]) ? null : u.get(field[0]).asString());
     }
     p.put("hire_date", EventValidator.date(u, "hireDate"));
     p.put("termination_date", null);
     p.put("employee_last_synced_at", OffsetDateTime.ofInstant(EventValidator.timestamp(u, "employeeLastSyncedAt"), java.time.ZoneOffset.UTC));
     JsonNode m = u.get("manager");
-    String[][] manager = {{"employeeId", "manager_employee_id"}, {"firstName", "manager_first_name"},
-        {"middleName", "manager_middle_name"},
-        {"lastName", "manager_last_name"}, {"email", "manager_email"}};
+    String[][] manager = {{"employeeId", "manager_employee_id"}, {"name", "manager_name"}};
     for (String[] field : manager) {
       p.put(field[1], m.get(field[0]).isNull() ? null : m.get(field[0]).asString());
     }
@@ -137,15 +135,6 @@ public class UamRepository {
       throw ApiException.conflict("ROLE_IDENTITY_CONFLICT", "Existing entitlement has a different roleName; review the role definition");
     }
     return result.getFirst();
-  }
-
-  public void saveOwners(UUID role, JsonNode owners) {
-    for (JsonNode o : owners) {
-      jdbc.update(sql.load("owner/upsert"),
-          Map.of("role", role, "owner", o.get("ownerId").asString(), "first", o.get("firstName").asString(), "last",
-              o.get("lastName").asString(), "email", o.get("email").asString()));
-    }
-    jdbc.update(sql.load("owner/reconcile"), Map.of("role", role, "owners", owners.toString()));
   }
 
   public void retainOrCreateAssignment(EmployeeEvent e, UUID account, UUID role, JsonNode source) {

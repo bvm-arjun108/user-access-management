@@ -119,21 +119,33 @@ class EventValidatorTest {
   }
 
   @Test
-  void duplicateOwnerIsRejected() {
-    var owners = (tools.jackson.databind.node.ArrayNode) payload.get("user").get("iPassRoles").get(0).get("owners");
-    owners.add(owners.get(0).deepCopy());
-    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("Duplicate ownerId");
-  }
-
-  @Test
-  void emptyOwnerListIsValidAndExplicit() {
-    ((ObjectNode) payload.get("user").get("iPassRoles").get(0)).putArray("owners");
-    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
-  }
-
-  @Test
   void nonPharosEntitlementsAreRejected() {
     ((ObjectNode) payload.get("user").get("iPassRoles").get(0)).put("isPharosGroup", false);
     assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("Pharos entitlements");
+  }
+
+  @Test
+  void employeeEmailMayBeNullOrOmitted() {
+    ObjectNode user = (ObjectNode) payload.get("user");
+    user.putNull("email");
+    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
+    user.remove("email");
+    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
+    user.put("email", "");
+    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("email");
+  }
+
+  @Test
+  void roleOwnerDataIsRejectedRatherThanMisclassified() {
+    ((ObjectNode) payload.get("user").get("iPassRoles").get(0)).putArray("owners");
+    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("Unknown field");
+  }
+
+  @Test
+  void managerNameIsRequiredAndNotSplit() {
+    ((ObjectNode) payload.get("user").get("manager")).put("name", "Maya van der Patel");
+    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
+    ((ObjectNode) payload.get("user").get("manager")).remove("name");
+    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("name");
   }
 }

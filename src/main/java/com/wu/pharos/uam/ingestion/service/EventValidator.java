@@ -24,11 +24,10 @@ public class EventValidator {
   private static final Set<String> PROFILE = Set.of("employeeId", "sourceSystem", "firstName", "middleName", "lastName", "email",
       "employmentStatus", "hireDate", "terminationDate", "employmentType", "employeeClass", "account", "superiorOrganization",
       "organizationId", "country", "region", "site", "supervisoryOrganization", "employeeLastSyncedAt", "manager", "iPassRoles");
-  private static final Set<String> MANAGER = Set.of("employeeId", "firstName", "middleName", "lastName", "email");
+  private static final Set<String> MANAGER = Set.of("employeeId", "name");
   private static final Set<String> ROLE = Set.of("entitlementValue", "entitlementType", "roleName", "displayName", "roleDescription",
-      "isPharosGroup", "isAvailableForRequest", "isPrivileged", "owners", "assignedAt", "assignmentStatus");
+      "isPharosGroup", "isAvailableForRequest", "isPrivileged", "assignedAt", "assignmentStatus");
   private static final Set<String> ACCOUNT = Set.of("application", "oktaAccountId");
-  private static final Set<String> OWNER = Set.of("ownerId", "firstName", "lastName", "email");
   private final String environment;
   private final Clock clock;
   private final Validator validator;
@@ -83,7 +82,7 @@ public class EventValidator {
       // Incomplete manager/profile/role data must not prevent revocation.
       return;
     }
-    fields(user, PROFILE, "user");
+    fields(user, PROFILE, "user", Set.of("email"));
     if (!"ACTIVE".equals(text(user, "employmentStatus"))) {
       throw rule("Provisioning and updates require ACTIVE employment status");
     }
@@ -94,12 +93,14 @@ public class EventValidator {
       throw invalid("sourceSystem must be WORKDAY or VNDLY");
     }
     for (String field : PROFILE) {
-      if (!Set.of("middleName", "terminationDate", "manager", "account", "iPassRoles").contains(field)) {
+      if (!Set.of("middleName", "terminationDate", "manager", "account", "iPassRoles", "email").contains(field)) {
         text(user, field);
       }
     }
     nullableText(user, "middleName");
-    email(user, "email");
+    if (user.hasNonNull("email")) {
+      email(user, "email");
+    }
     LocalDate hire = date(user, "hireDate");
     if (hire.isAfter(event.eventEffectiveAt().atOffset(java.time.ZoneOffset.UTC).toLocalDate())) {
       throw rule("hireDate cannot follow the effective event date");
@@ -107,15 +108,8 @@ public class EventValidator {
     timestamp(user, "employeeLastSyncedAt");
     JsonNode manager = user.get("manager");
     fields(manager, MANAGER, "manager");
-    for (String f : MANAGER) {
-      if (f.equals("middleName")) {
-        nullableText(manager, f);
-      } else {
-        text(manager, f);
-      }
-    }
     identifier(manager, "employeeId");
-    email(manager, "email");
+    text(manager, "name");
     JsonNode account = user.get("account");
     fields(account, ACCOUNT, "account");
     identifier(account, "application");
@@ -152,20 +146,6 @@ public class EventValidator {
       if (!role.get("isPharosGroup").asBoolean()) {
         throw rule("iPassRoles must contain only Pharos entitlements");
       }
-      JsonNode owners = role.get("owners");
-      if (!owners.isArray() || owners.size() > 100) {
-        throw invalid("owners must be an array with at most 100 entries");
-      }
-      Set<String> ownerIds = new HashSet<>();
-      for (JsonNode owner : owners) {
-        fields(owner, OWNER, "owner");
-        if (!ownerIds.add(identifier(owner, "ownerId"))) {
-          throw rule("Duplicate ownerId in role owners");
-        }
-        text(owner, "firstName");
-        text(owner, "lastName");
-        email(owner, "email");
-      }
       if (!"PROVISIONED".equals(text(role, "assignmentStatus"))) {
         throw rule("Only current PROVISIONED roles belong in the snapshot");
       }
@@ -176,11 +156,15 @@ public class EventValidator {
   }
 
   private void fields(JsonNode node, Set<String> fields, String label) {
+    fields(node, fields, label, Set.of());
+  }
+
+  private void fields(JsonNode node, Set<String> fields, String label, Set<String> optional) {
     if (node == null || !node.isObject()) {
       throw invalid(label + " must be an object");
     }
     for (String name : fields) {
-      if (!node.has(name)) {
+      if (!node.has(name) && !optional.contains(name)) {
         throw invalid(label + "." + name + " is required");
       }
     }
