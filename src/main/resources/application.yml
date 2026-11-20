@@ -32,8 +32,6 @@ management:
   endpoint:
     health:
       show-details: never
-uam:
-  environment: ${UAM_ENVIRONMENT:Prod}
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

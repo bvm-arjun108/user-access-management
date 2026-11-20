@@ -2,7 +2,7 @@
 
 ## Payload rules
 
-One event contains one employee and one account in an environment. USER_PROVISIONED and USER_UPDATED include all profile fields, employeeClass, account and the complete iPassRoles list. The role source key is entitlementValue, not roleId. Each role includes entitlementType, roleName, displayName, description, the three boolean flags, assignedAt and PROVISIONED status.
+One event contains one employee and one source account. USER_PROVISIONED and USER_UPDATED include all profile fields, employeeClass, account and the complete iPassRoles list. The role source key is entitlementValue, not roleId. Each role includes entitlementType, roleName, displayName, description, the three boolean flags, assignedAt and PROVISIONED status.
 
 
 ## Lifecycle
@@ -13,7 +13,7 @@ One event contains one employee and one account in an environment. USER_PROVISIO
 | First approved Pharos access | USER_PROVISIONED | Create/update employee, account, roles and account assignments | [01](examples/01-first-provisioning.json) |
 | Remove GSI | USER_UPDATED | Close omitted GSI assignment for this account only; retain shared role | [02](examples/02-remove-gsi.json) |
 | Add GDD | USER_UPDATED | Retain existing assignments and original times; add GDD | [03](examples/03-add-gdd.json) |
-| Employment termination | USER_TERMINATED | Mark employee TERMINATED and close all account assignments in the deployment | [04](examples/04-termination.json) |
+| Employment termination | USER_TERMINATED | Mark employee TERMINATED and close all account assignments in this database | [04](examples/04-termination.json) |
 | Correct wrongful termination | Approved USER_PROVISIONED | Clear termination date; keep original hire date; create new assignment periods for the specified account only | [05](examples/05-termination-correction.json) |
 | Genuine rehire | Approved USER_PROVISIONED | Update employment details and provision only newly approved roles | [06](examples/06-genuine-rehire.json) |
 | Remove last role | USER_UPDATED with iPassRoles [] | Keep employee ACTIVE; close assignments for supplied account only | [07](examples/07-remove-all-roles.json) |
@@ -28,7 +28,7 @@ One event contains one employee and one account in an environment. USER_PROVISIO
 
 Validate → record/find UUID → serialize employee changes → save profile/account/catalog → reconcile supplied account assignments → commit with APPLIED status. Failure rolls back business changes and records FAILED separately. Identical retries of APPLIED events return SUCCESS without repeated changes. Different content under the same UUID returns 409.
 
-The same account cannot be assigned to another employee. Missing roles, malformed booleans and duplicate entitlement IDs are rejected. Role names must match the environment. A missing manager blocks provisioning/updates, never minimal termination.
+The same account cannot be assigned to another employee. Missing roles, malformed booleans and duplicate entitlement IDs are rejected. Role names are stored as supplied; no environment is inferred. A missing manager blocks provisioning/updates, never minimal termination.
 
 ## Termination and delivery
 
@@ -41,3 +41,5 @@ This module stores ingestion state. Granular permission editing and external ses
 Assignment removed_at is the time Pharos closed access, including termination; it is not confirmation of iPass membership removal.
 
 Source Owner ID/First/Last describe the employee, not role owners. Manager uses employeeId and name. Employee email may be null or omitted.
+
+Two distinct Okta IDs under the same Owner ID remain two account records. Their role lists are independent, even when environment cannot be determined. See [second source account](examples/14-second-source-account.json).

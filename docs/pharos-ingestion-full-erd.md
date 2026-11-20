@@ -1,12 +1,12 @@
 # Pharos UAM ER diagram
 
-Five tables; all 65 columns match the DDL. PK = primary key; FK = foreign key. Physical nullability is conditional for ACTIVE employee profiles. Email is optional.
+Five tables, 61 columns and five foreign keys match the DDL. PK = primary key; FK = foreign key. Employee email is optional. Environment is not supplied or inferred.
 
 ```mermaid
 erDiagram
     EMPLOYEE ||--o{ OKTA_ACCOUNT : "employee_id"
-    OKTA_ACCOUNT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "account_id + application + environment"
-    IPASS_ROLE ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "role_id + application + environment"
+    OKTA_ACCOUNT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "account_id + application"
+    IPASS_ROLE ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "role_id + application"
     IPASS_EVENT ||--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "assignment_event_id"
     IPASS_EVENT o|--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : "removal_event_id"
 
@@ -39,7 +39,6 @@ erDiagram
         uuid account_id PK "Required"
         text employee_id FK "Required"
         text application "Required"
-        text environment "Required"
         text okta_account_id "Required"
         timestamptz created_at "Required"
         timestamptz updated_at "Required"
@@ -48,7 +47,6 @@ erDiagram
     IPASS_ROLE {
         uuid role_id PK "Required"
         text application "Required"
-        text environment "Required"
         text entitlement_value "Required"
         text entitlement_type "Required"
         text role_name "Required"
@@ -65,7 +63,6 @@ erDiagram
         uuid event_id PK "Required"
         text event_type "Required"
         text employee_id "Required"
-        text environment "Required"
         text application "Nullable"
         text okta_account_id "Nullable"
         timestamptz event_effective_at "Required"
@@ -82,7 +79,6 @@ erDiagram
         uuid account_id FK "Required"
         uuid role_id FK "Required"
         text application FK "Required"
-        text environment FK "Required"
         timestamptz assigned_at "Required"
         timestamptz removed_at "Nullable"
         uuid assignment_event_id FK "Required"
@@ -91,6 +87,4 @@ erDiagram
     }
 ```
 
-Account uniqueness: application + environment + okta_account_id. Role uniqueness: application + environment + entitlement_value. One open assignment per account/role.
-
-Source Owner ID/First/Last describe the employee. No role-owner data is supplied. Manager ID and full name are stored directly in employee.
+Account uniqueness: application + okta_account_id. Role uniqueness: application + entitlement_value. Only one current assignment per account/role. Source Owner ID identifies the employee; different Okta IDs remain separate accounts.

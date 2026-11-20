@@ -14,13 +14,12 @@ import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 
 @Component
 public class EventValidator {
-  private static final Set<String> ENVELOPE = Set.of("eventId", "eventType", "eventEffectiveAt", "environment", "user");
+  private static final Set<String> ENVELOPE = Set.of("eventId", "eventType", "eventEffectiveAt", "user");
   private static final Set<String> PROFILE = Set.of("employeeId", "sourceSystem", "firstName", "middleName", "lastName", "email",
       "employmentStatus", "hireDate", "terminationDate", "employmentType", "employeeClass", "account", "superiorOrganization",
       "organizationId", "country", "region", "site", "supervisoryOrganization", "employeeLastSyncedAt", "manager", "iPassRoles");
@@ -28,15 +27,10 @@ public class EventValidator {
   private static final Set<String> ROLE = Set.of("entitlementValue", "entitlementType", "roleName", "displayName", "roleDescription",
       "isPharosGroup", "isAvailableForRequest", "isPrivileged", "assignedAt", "assignmentStatus");
   private static final Set<String> ACCOUNT = Set.of("application", "oktaAccountId");
-  private final String environment;
   private final Clock clock;
   private final Validator validator;
 
-  public EventValidator(@Value("${uam.environment}") String environment, Clock clock, Validator validator) {
-    if (!Set.of("Prod", "UAT", "Dev").contains(environment)) {
-      throw new IllegalArgumentException("Invalid UAM_ENVIRONMENT");
-    }
-    this.environment = environment;
+  public EventValidator(Clock clock, Validator validator) {
     this.clock = clock;
     this.validator = validator;
   }
@@ -53,10 +47,6 @@ public class EventValidator {
     } catch (IllegalArgumentException e) {
       throw invalid("Unsupported eventType");
     }
-    String env = text(root, "environment");
-    if (!environment.equals(env)) {
-      throw rule("Request environment does not match this deployment");
-    }
     Instant eventEffectiveAt = timestamp(root, "eventEffectiveAt");
     if (eventEffectiveAt.isAfter(clock.instant().plusSeconds(60))) {
       throw rule("eventEffectiveAt cannot be in the future");
@@ -66,7 +56,7 @@ public class EventValidator {
       throw invalid("user must be an object");
     }
     String employeeId = identifier(user, "employeeId");
-    return new EmployeeEvent(UUID.fromString(id), type, eventEffectiveAt, env, employeeId, user, root);
+    return new EmployeeEvent(UUID.fromString(id), type, eventEffectiveAt, employeeId, user, root);
   }
 
   public void validate(EmployeeEvent event) {
@@ -131,10 +121,7 @@ public class EventValidator {
       if (!ids.add(roleId)) {
         throw rule("Duplicate entitlementValue in iPassRoles");
       }
-      String name = text(role, "roleName");
-      if (!name.matches("APP_Pharos_" + event.environment() + "_[A-Za-z0-9]+_[A-Za-z0-9]+")) {
-        throw rule("Role name must follow APP_Pharos_Environment_BusinessGroup_Persona and match the environment");
-      }
+      text(role, "roleName");
       text(role, "roleDescription");
       text(role, "displayName");
       text(role, "entitlementType");

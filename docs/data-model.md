@@ -7,8 +7,8 @@ iPass sends employee details and a complete approved role snapshot for one accou
 | Table | Stores | Primary key | Duplicate prevention |
 | --- | --- | --- | --- |
 | employee | Latest employee profile, manager and employment status | employee_id | One row per employee identity |
-| okta_account | Employee's source account | account_id, generated UUID | application + environment + okta_account_id |
-| ipass_role | Shared source role definition | role_id, generated UUID | application + environment + entitlement_value |
+| okta_account | Employee's source account | account_id, generated UUID | application + okta_account_id |
+| ipass_role | Shared source role definition | role_id, generated UUID | application + entitlement_value |
 | okta_account_role_assignment | Current and historical assignment periods | assignment_id, generated UUID | One open assignment per account_id + role_id |
 | ipass_event | Original payload and latest processing result | event_id, UUID from iPass | One event UUID; identical retries make no repeated changes |
 
@@ -23,7 +23,7 @@ erDiagram
     IPASS_EVENT o|--o{ OKTA_ACCOUNT_ROLE_ASSIGNMENT : closes
 ~~~
 
-Assignments reference an account, role and creation event. The removal event is optional until closed. Composite account/role foreign keys also check application and environment. All five foreign keys use ON DELETE RESTRICT.
+Assignments reference an account, role and creation event. The removal event is optional until closed. Composite account/role foreign keys also check application. All five foreign keys use ON DELETE RESTRICT.
 
 ## Source mapping
 
@@ -40,11 +40,18 @@ Assignments reference an account, role and creation event. The removal event is 
 
 Employee email is optional and nullable. Supply the agreed work/contact email when available; do not automatically substitute home email. Missing email in a full snapshot is stored as null. Manager ID and full name are required; Pharos does not split the name or require a manager email.
 
-## Identity and environment
+## Employee and account identity
 
 Internal account_id, role_id and assignment_id values are PostgreSQL-generated UUIDs. Source employee and Okta account IDs are strings. Updating an existing account or role retains its internal UUID.
 
-The same Okta ID can appear in Dev and UAT because uniqueness includes environment. An existing scoped account cannot move to another employee. Each deployment accepts one environment; Dev, UAT and Prod are supported. QA is not yet implemented.
+| Employee ID | Okta account ID | Assigned entitlement |
+| --- | --- | --- |
+| 1234 | 00u8k3m5n7P2qRsTu0h7 | 00g8n4q2r6T9vWxYz0h7 |
+| 1234 | 00u9j4n6p8Q3rStUv0h7 | 00g9p5s3u7V2xYaBc0h7 |
+
+This is one employee, two distinct accounts and two account-specific assignments. Removing roles from either account does not affect the other.
+
+Environment is not supplied or inferred. Role names and IDs cannot establish QA or Prod authorization. An existing source account cannot move to another employee. Account uniqueness is application + okta_account_id; role uniqueness is application + entitlement_value.
 
 ## Changes and history
 
@@ -54,7 +61,7 @@ The same Okta ID can appear in Dev and UAT because uniqueness includes environme
 | Remove role | Close assignment; retain role and history |
 | Remove all roles | Send iPassRoles: []; close assignments for that account only |
 | Reassign role | Create a new assignment period |
-| Terminate employee | Mark TERMINATED; close assignments for all accounts in this deployment |
+| Terminate employee | Mark TERMINATED; close assignments for all accounts in this database |
 | Approved restoration | Require USER_PROVISIONED; restore only supplied account roles |
 | Retry identical event | Return SUCCESS without repeating applied changes |
 | Change payload under same UUID | Reject with HTTP 409 |
@@ -72,7 +79,7 @@ The GET employee API returns current assignments by default. Add ?includeHistory
 | assignment_event_id / removal_event_id | Event that created / closed assignment |
 | created_at / updated_at | Pharos record timestamps |
 
-removed_at does not confirm when iPass removed membership. Termination must reach every relevant deployment immediately, independently of iPass's cleanup period.
+removed_at does not confirm when iPass removed membership. Termination must reach the receiving Pharos database immediately, independently of iPass's cleanup period.
 
 Event status is RECEIVED, APPLIED or FAILED. Pharos records failure code/message where possible. Business changes and APPLIED status commit together; business failures roll changes back.
 

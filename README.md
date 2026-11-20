@@ -45,11 +45,11 @@ The API and database bind to localhost. Compose uses `${VARIABLE:-default}`; Spr
 | GET | /api/v1/employees/{employeeId} | Profile and current assignments |
 | GET | /api/v1/ipass/events/{eventId} | Event processing result |
 
-New event: new UUID. Retry: identical UUID and payload. Send complete approved `iPassRoles` for the supplied `account`. Omitted roles are removed from that account only; [] removes all assignments for that account. Missing/null role lists are rejected. Manager details, employeeClass and account are required for active profiles. Termination requires employee identity and TERMINATED status, closes assignments for every account in this deployment, and is independent of iPass's 15-day cleanup.
+New event: new UUID. Retry: identical UUID and payload. Send complete approved `iPassRoles` for the supplied `account`. Omitted roles are removed from that account only; [] removes all assignments for that account. Missing/null role lists are rejected. Manager details, employeeClass and account are required for active profiles. Termination requires employee identity and TERMINATED status, closes assignments for every account in this database, and is independent of iPass's 15-day cleanup.
 
 Employee/assignment changes and successful event status commit together. Failures roll back and are recorded separately. Duplicate successful events make no changes. A terminated employee requires an approved USER_PROVISIONED event to restore access.
 
-No eventVersion is used. iPass must preserve employee event order, including retries. Employee and role identifiers must be stable across source systems. One Pharos environment per deployment.
+No eventVersion is used. iPass must preserve employee event order, including retries. Employee and role identifiers must be stable across source systems. Environment is not supplied or inferred.
 
 Granular permission editing and external session revocation are separate integrations.
 
@@ -70,7 +70,7 @@ The test database runs the same startup DDL automatically when initialized. Test
 
 ## Account and role metadata
 
-Five tables: employee, okta_account, ipass_role, okta_account_role_assignment and ipass_event. An account is uniquely identified by application/environment/oktaAccountId and cannot move to another employee. Entitlements are uniquely identified by application/environment/entitlementValue. The previous pharosRoles and source roleId fields are not accepted; use iPassRoles and entitlementValue.
+Five tables: employee, okta_account, ipass_role, okta_account_role_assignment and ipass_event. An account is uniquely identified by application/oktaAccountId and cannot move to another employee. Entitlements are uniquely identified by application/entitlementValue. The previous pharosRoles and source roleId fields are not accepted; use iPassRoles and entitlementValue.
 
 
 isAvailableForRequest and isPrivileged are stored role metadata and never activate permissions. isPrivileged is placed at role level under the agreed sample; confirm its source meaning before production integration. Existing entitlement names require review before renaming; displayName, description, flags can update normally.
@@ -92,3 +92,5 @@ GET /api/v1/employees/{employeeId} returns current assignments. Add ?includeHist
 Confluence-ready overview: [API and data model](docs/confluence-api-data-model.md).
 
 Source export “Owner” identifies the employee holding the account; role-owner data is not supplied. Manager is {employeeId, name}; employee email may be null or omitted. No home-email fallback is applied.
+
+A single employee may have multiple distinct source accounts. Each account has its own complete role snapshot. Environment is not part of the payload, database identity or role-name validation; ingestion does not determine QA/Prod authorization.

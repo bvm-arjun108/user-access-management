@@ -2,7 +2,6 @@
   "eventId": "8368fa3b-d25f-46f8-aab1-6d505b89324c",
   "eventType": "USER_UPDATED",
   "eventEffectiveAt": "2026-07-30T11:00:00Z",
-  "environment": "Prod",
   "user": {
     "employeeId": "WU100482",
     "sourceSystem": "WORKDAY",

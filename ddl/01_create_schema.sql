@@ -46,18 +46,16 @@ CREATE TABLE pharos_uam.okta_account (
 account_id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     employee_id         TEXT NOT NULL REFERENCES pharos_uam.employee(employee_id) ON DELETE RESTRICT,
     application         TEXT NOT NULL CHECK (btrim(application) <> ''),
-    environment         TEXT NOT NULL CHECK (environment IN ('Prod','UAT','Dev')),
     okta_account_id TEXT NOT NULL CHECK (btrim(okta_account_id) <> ''),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT uq_account_okta UNIQUE(application,environment,okta_account_id),
-    CONSTRAINT uq_account_scope UNIQUE(account_id,application,environment)
+    CONSTRAINT uq_account_okta UNIQUE(application,okta_account_id),
+    CONSTRAINT uq_account_scope UNIQUE(account_id,application)
 );
 
 CREATE TABLE pharos_uam.ipass_role (
 role_id             UUID DEFAULT gen_random_uuid() CONSTRAINT pk_role PRIMARY KEY,
     application         TEXT NOT NULL CHECK (btrim(application) <> ''),
-    environment         TEXT NOT NULL CHECK (environment IN ('Prod','UAT','Dev')),
     entitlement_value   TEXT NOT NULL CHECK (btrim(entitlement_value) <> ''),
     entitlement_type    TEXT NOT NULL CHECK (btrim(entitlement_type) <> ''),
     role_name           TEXT NOT NULL CHECK (btrim(role_name) <> ''),
@@ -68,9 +66,8 @@ role_id             UUID DEFAULT gen_random_uuid() CONSTRAINT pk_role PRIMARY KE
     is_privileged       BOOLEAN NOT NULL,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT uq_role_entitlement UNIQUE(application,environment,entitlement_value),
-    CONSTRAINT uq_role_scope UNIQUE(role_id,application,environment),
-    CONSTRAINT ck_role_name_scope CHECK (starts_with(role_name,'APP_Pharos_' || environment || '_'))
+    CONSTRAINT uq_role_entitlement UNIQUE(application,entitlement_value),
+    CONSTRAINT uq_role_scope UNIQUE(role_id,application)
 );
 
 CREATE TABLE pharos_uam.ipass_event (
@@ -79,7 +76,6 @@ CREATE TABLE pharos_uam.ipass_event (
     event_type          TEXT NOT NULL CHECK (event_type IN (
                             'USER_PROVISIONED', 'USER_UPDATED', 'USER_TERMINATED')),
     employee_id         TEXT NOT NULL CHECK (btrim(employee_id) <> ''),
-    environment         TEXT NOT NULL CHECK (environment IN ('Prod', 'UAT', 'Dev')),
     application         TEXT,
     okta_account_id TEXT,
     event_effective_at         TIMESTAMPTZ NOT NULL,
@@ -105,16 +101,15 @@ assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     account_id          UUID NOT NULL,
     role_id             UUID NOT NULL,
     application         TEXT NOT NULL,
-    environment         TEXT NOT NULL,
     assigned_at         TIMESTAMPTZ NOT NULL,
     removed_at          TIMESTAMPTZ,
     assignment_event_id    UUID NOT NULL REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
     removal_event_id    UUID REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT fk_account_role_account FOREIGN KEY(account_id,application,environment)
-        REFERENCES pharos_uam.okta_account(account_id,application,environment) ON DELETE RESTRICT,
-    CONSTRAINT fk_account_role_role FOREIGN KEY(role_id,application,environment)
-        REFERENCES pharos_uam.ipass_role(role_id,application,environment) ON DELETE RESTRICT,
+    CONSTRAINT fk_account_role_account FOREIGN KEY(account_id,application)
+        REFERENCES pharos_uam.okta_account(account_id,application) ON DELETE RESTRICT,
+    CONSTRAINT fk_account_role_role FOREIGN KEY(role_id,application)
+        REFERENCES pharos_uam.ipass_role(role_id,application) ON DELETE RESTRICT,
     CONSTRAINT ck_account_role_removal CHECK (
         (removed_at IS NULL AND removal_event_id IS NULL) OR
         (removed_at IS NOT NULL AND removal_event_id IS NOT NULL AND removed_at >= assigned_at)

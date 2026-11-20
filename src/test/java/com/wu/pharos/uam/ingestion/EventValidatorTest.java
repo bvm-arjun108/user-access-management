@@ -19,7 +19,7 @@ class EventValidatorTest {
 
   @BeforeEach
   void setup() throws Exception {
-    validator = new EventValidator("Prod", Clock.fixed(Instant.parse("2026-11-12T00:00:00Z"), ZoneOffset.UTC),
+    validator = new EventValidator(Clock.fixed(Instant.parse("2026-11-12T00:00:00Z"), ZoneOffset.UTC),
         Validation.buildDefaultValidatorFactory().getValidator());
     payload = (ObjectNode) mapper.readTree(getClass().getResourceAsStream("/provision.json"));
   }
@@ -75,7 +75,7 @@ class EventValidatorTest {
   }
 
   @Test
-  void wrongEnvironmentRejected() {
+  void environmentIsNotPartOfSourceContract() {
     payload.put("environment", "UAT");
     assertThatThrownBy(() -> validator.envelope(payload)).hasMessageContaining("environment");
   }
@@ -147,5 +147,11 @@ class EventValidatorTest {
     assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
     ((ObjectNode) payload.get("user").get("manager")).remove("name");
     assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("name");
+  }
+
+  @Test
+  void sourceRoleNameDoesNotNeedEnvironmentOrPharosNamingConvention() {
+    ((ObjectNode) payload.get("user").get("iPassRoles").get(0)).put("roleName", "Pharos Standard Investigator");
+    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
   }
 }

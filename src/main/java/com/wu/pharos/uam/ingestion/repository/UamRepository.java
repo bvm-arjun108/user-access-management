@@ -38,7 +38,6 @@ public class UamRepository {
       .addValue("id", e.eventId())
       .addValue("type", e.eventType().name())
       .addValue("employee", e.employeeId())
-      .addValue("environment", e.environment())
       .addValue("occurred", OffsetDateTime.ofInstant(e.eventEffectiveAt(), java.time.ZoneOffset.UTC))
       .addValue("payload", e.payload().toString())
       .addValue("application", optionalAccountField(e, "application"))
@@ -108,9 +107,8 @@ public class UamRepository {
 
   public UUID saveAccount(EmployeeEvent e) {
     JsonNode a = e.user().get("account");
-    List<UUID> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "environment", e.environment(),
-        "application", a.get("application").asString(), "external", a.get("oktaAccountId").asString()), (rs, i) -> rs.getObject(1,
-        UUID.class));
+    List<UUID> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "application",
+        a.get("application").asString(), "external", a.get("oktaAccountId").asString()), (rs, i) -> rs.getObject(1, UUID.class));
     if (result.isEmpty()) {
       throw ApiException.conflict("ACCOUNT_IDENTITY_CONFLICT", "Account is already linked to a different employee");
     }
@@ -121,7 +119,6 @@ public class UamRepository {
 
   public RoleRow upsertRole(JsonNode r, EmployeeEvent e) {
     var p = new MapSqlParameterSource("application", e.user().get("account").get("application").asString())
-      .addValue("environment", e.environment())
       .addValue("entitlement", r.get("entitlementValue").asString())
       .addValue("entitlementType", r.get("entitlementType").asString())
       .addValue("name", r.get("roleName").asString())
@@ -152,7 +149,6 @@ public class UamRepository {
         new MapSqlParameterSource("account", account)
           .addValue("role", role)
           .addValue("application", e.user().get("account").get("application").asString())
-          .addValue("environment", e.environment())
           .addValue("assigned", OffsetDateTime.ofInstant(assigned, java.time.ZoneOffset.UTC))
           .addValue("event", e.eventId()));
   }
@@ -163,7 +159,7 @@ public class UamRepository {
   }
 
   public void terminateAssignments(EmployeeEvent e) {
-    jdbc.update(sql.load("assignment/terminate"), Map.of("employee", e.employeeId(), "environment", e.environment(), "event", e.eventId()));
+    jdbc.update(sql.load("assignment/terminate"), Map.of("employee", e.employeeId(), "event", e.eventId()));
   }
 
   public void applied(EmployeeEvent e) {
@@ -174,12 +170,12 @@ public class UamRepository {
     jdbc.update(sql.load("event/fail"), Map.of("id", e.eventId(), "code", code, "message", message));
   }
 
-  public JsonNode employee(String employee, String environment, boolean includeHistory) {
-    return read("read/employee", Map.of("employee", employee, "environment", environment, "includeHistory", includeHistory));
+  public JsonNode employee(String employee, boolean includeHistory) {
+    return read("read/employee", Map.of("employee", employee, "includeHistory", includeHistory));
   }
 
-  public JsonNode event(UUID id, String environment) {
-    return read("read/event", Map.of("id", id, "environment", environment));
+  public JsonNode event(UUID id) {
+    return read("read/event", Map.of("id", id));
   }
 
   private JsonNode read(String query, Map<String, ?> p) {

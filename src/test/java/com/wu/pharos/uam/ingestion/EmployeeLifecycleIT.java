@@ -255,29 +255,29 @@ class EmployeeLifecycleIT {
   void databaseRejectsDuplicateAccountsRolesAndCurrentAssignments() throws Exception {
     assertThat(post(initial).status()).isEqualTo(200);
     assertThatThrownBy(() -> jdbc.update(
-        "INSERT INTO pharos_uam.okta_account(employee_id,application,environment,okta_account_id) "
-        + "SELECT employee_id,application,environment,okta_account_id FROM pharos_uam.okta_account LIMIT 1"))
+        "INSERT INTO pharos_uam.okta_account(employee_id,application,okta_account_id) "
+        + "SELECT employee_id,application,okta_account_id FROM pharos_uam.okta_account LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThatThrownBy(() -> jdbc.update(
-        "INSERT INTO pharos_uam.ipass_role(application,environment,entitlement_value,entitlement_type,role_name,display_name,"
+        "INSERT INTO pharos_uam.ipass_role(application,entitlement_value,entitlement_type,role_name,display_name,"
         + "role_description,is_pharos_group,is_available_for_request,is_privileged) "
-        + "SELECT application,environment,entitlement_value,entitlement_type,role_name,display_name,"
+        + "SELECT application,entitlement_value,entitlement_type,role_name,display_name,"
         + "role_description,is_pharos_group,is_available_for_request,is_privileged FROM pharos_uam.ipass_role LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThatThrownBy(() -> jdbc.update(
-        "INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,application,environment,assigned_at,assignment_event_id) "
-        + "SELECT account_id,role_id,application,environment,assigned_at,assignment_event_id "
+        "INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,application,assigned_at,assignment_event_id) "
+        + "SELECT account_id,role_id,application,assigned_at,assignment_event_id "
         + "FROM pharos_uam.okta_account_role_assignment WHERE removed_at IS NULL LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThat(active()).isEqualTo(3);
   }
 
   @Test
-  void accountAndRoleEnvironmentAreEnforcedByDatabase() throws Exception {
+  void accountAndRoleApplicationAreEnforcedByDatabase() throws Exception {
     post(initial);
     jdbc.update("UPDATE pharos_uam.okta_account_role_assignment SET removed_at=now(),removal_event_id=assignment_event_id");
-    assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,application,environment,assigned_at,"
-        + "assignment_event_id) SELECT a.account_id,r.role_id,'Okta','UAT',now(),? FROM pharos_uam.okta_account a CROSS JOIN pharos_uam.ipass_role "
+    assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,application,assigned_at,"
+        + "assignment_event_id) SELECT a.account_id,r.role_id,'DifferentApplication',now(),? FROM pharos_uam.okta_account a CROSS JOIN pharos_uam.ipass_role "
         + "r LIMIT 1", UUID.fromString(initial.get("eventId").asString())))
       .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
       .hasMessageContaining("fk_account_role_account");
@@ -404,7 +404,7 @@ class EmployeeLifecycleIT {
     assertThat(post(initial).status()).isEqualTo(200);
     String times =
         "SELECT e.updated_at,a.updated_at,r.updated_at FROM pharos_uam.employee e JOIN pharos_uam.okta_account a "
-        + "USING(employee_id) JOIN pharos_uam.ipass_role r ON r.application=a.application AND r.environment=a.environment "
+        + "USING(employee_id) JOIN pharos_uam.ipass_role r ON r.application=a.application "
         + "WHERE r.entitlement_value='00g8n4q2r6T9vWxYz0h7'";
     var before = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant(),
         rs.getTimestamp(3).toInstant()));
@@ -432,5 +432,42 @@ class EmployeeLifecycleIT {
     ((ObjectNode) update.get("user")).remove("email");
     assertThat(post(update).status()).isEqualTo(200);
     assertThat(jdbc.queryForObject("SELECT email FROM pharos_uam.employee", String.class)).isNull();
+  }
+
+  @Test
+  void twoSourceAccountsWithUnknownEnvironmentRemainSeparate() throws Exception {
+    ObjectNode user = (ObjectNode) initial.get("user");
+    ObjectNode firstRole = (ObjectNode) user.get("iPassRoles").get(0).deepCopy();
+    firstRole.put("roleName", "Pharos KYC Analyst");
+    user.putArray("iPassRoles").add(firstRole);
+    assertThat(post(initial).status()).isEqualTo(200);
+
+    ObjectNode second = next("USER_UPDATED");
+    ((ObjectNode) second.get("user").get("account")).put("oktaAccountId", "00u9j4n6p8Q3rStUv0h7");
+    ObjectNode secondRole = (ObjectNode) firstRole.deepCopy();
+    secondRole.put("entitlementValue", "00g9p5s3u7V2xYaBc0h7");
+    ((ObjectNode) second.get("user")).putArray("iPassRoles").add(secondRole);
+    assertThat(post(second).status()).isEqualTo(200);
+    var read = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482")).GET().build(),
+        HttpResponse.BodyHandlers.ofString());
+    JsonNode accounts = mapper.readTree(read.body()).get("accounts");
+    assertThat(accounts.size()).isEqualTo(2);
+    assertThat(read.body()).doesNotContain("environment");
+    for (JsonNode account : accounts) {
+      assertThat(account.get("assignments").size()).isEqualTo(1);
+      String expected =
+          account.get("oktaAccountId").asString().equals("00u9j4n6p8Q3rStUv0h7") ? "00g9p5s3u7V2xYaBc0h7" : "00g8n4q2r6T9vWxYz0h7";
+      assertThat(account.get("assignments").get(0).get("entitlementValue").asString()).isEqualTo(expected);
+    }
+
+    ObjectNode emptySecond = (ObjectNode) second.deepCopy();
+    emptySecond.put("eventId", UUID.randomUUID().toString());
+    ((ObjectNode) emptySecond.get("user")).putArray("iPassRoles");
+    assertThat(post(emptySecond).status()).isEqualTo(200);
+    assertThat(active()).isEqualTo(1);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee", Long.class)).isEqualTo(1);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account", Long.class)).isEqualTo(2);
+    assertThat(post(termination()).status()).isEqualTo(200);
+    assertThat(active()).isZero();
   }
 }

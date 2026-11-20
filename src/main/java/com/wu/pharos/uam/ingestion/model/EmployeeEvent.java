@@ -4,5 +4,4 @@ import java.time.Instant;
 import java.util.UUID;
 import tools.jackson.databind.JsonNode;
 
-public record EmployeeEvent(UUID eventId, EventType eventType, Instant eventEffectiveAt, String environment, String employeeId,
-    JsonNode user, JsonNode payload) {}
+public record EmployeeEvent(UUID eventId, EventType eventType, Instant eventEffectiveAt, String employeeId, JsonNode user, JsonNode payload) {}
