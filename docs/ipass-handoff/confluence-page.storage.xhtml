@@ -1,0 +1,96 @@
+<h1>Pharos UAM — iPass integration</h1>
+<p>iPass sends employee details and approved Pharos role assignments. Pharos stores the employee, each Okta account and its role history.</p>
+<h2>Connection</h2>
+<table><tbody><tr><th>Item</th><th>Value</th></tr><tr><td>Endpoint</td><td><code>POST {{PHAROS_BASE_URL}}/api/v1/ipass/events</code></td></tr><tr><td>Request headers</td><td><code>Content-Type: application/json</code>; optional <code>Accept: application/json</code></td></tr><tr><td>Authentication</td><td>To be agreed before shared deployment. The current implementation has no authentication.</td></tr><tr><td>Troubleshooting</td><td>Pharos returns <code>X-Correlation-ID</code> on every response. Save it with the event ID.</td></tr></tbody></table>
+<h2>When to send an event</h2>
+<table><tbody><tr><th>Event</th><th>Send when</th><th>Payload / result</th></tr><tr><td><code>USER_PROVISIONED</code></td><td>First approved Pharos access, approved rehire or termination correction.</td><td>Full ACTIVE profile, one account and at least one current approved role.</td></tr><tr><td><code>USER_UPDATED</code></td><td>Roles or employee details change; another account is added for an active employee.</td><td>Full ACTIVE profile, one account and its complete current role list. An empty list removes all roles from that account.</td></tr><tr><td><code>USER_TERMINATED</code></td><td>Employment termination becomes effective.</td><td>Employee ID and TERMINATED status; termination date when known. Closes every current role assignment for that employee across all stored accounts.</td></tr></tbody></table>
+<p>Do not send hires without Pharos access, pending requests or unrelated application roles. Send termination immediately, including for previously provisioned employees with no remaining roles; do not wait for the 15-day iPass cleanup. USER_UPDATED cannot restore terminated employment.</p>
+<h2>Payload rules</h2>
+<table><tbody><tr><th>Rule</th><th>Requirement</th></tr><tr><td>Account scope</td><td>One employee and one account per provisioning/update call. Send separate calls for distinct Okta accounts.</td></tr><tr><td>Complete role list</td><td><code>user.iPassRoles</code> contains all current Pharos roles for that account. Omitted roles are removed. Missing/null is rejected. Maximum 500 roles.</td></tr><tr><td>Identity</td><td>Employee: <code>employeeId</code> (source Owner ID). Account: <code>application</code> + <code>oktaAccountId</code>. Role: <code>application</code> + <code>entitlementValue</code>. Keep identifiers stable and preserve their case.</td></tr><tr><td>Environment / owners</td><td>No environment field or inference. Source Owner First/Last describe the employee; role owners are not supplied.</td></tr><tr><td>Employee fields</td><td>Use every field in the full example. Only <code>email</code> may be omitted; it may also be null. <code>middleName</code> may be null. ACTIVE requires <code>terminationDate: null</code>. Manager ID and full name are required.</td></tr><tr><td>Role fields</td><td>Every shown role field is required. <code>assignmentStatus</code> is always PROVISIONED; <code>isPharosGroup</code> must be true. Send JSON booleans, not strings. Requestability/privilege flags are metadata.</td></tr><tr><td>Dates</td><td>Dates: YYYY-MM-DD. Timestamps: RFC 3339 with timezone. <code>eventEffectiveAt</code> is when the change took effect; <code>employeeLastSyncedAt</code> is when iPass refreshed employee details from Workday/VNDLY.</td></tr><tr><td>Assignment time</td><td><code>assignedAt</code> is the original start of the current assignment. Preserve it while membership continues; it cannot follow <code>eventEffectiveAt</code>.</td></tr><tr><td>Validation</td><td>Send nonblank strings without surrounding whitespace. Do not send future-effective changes. Full field types and limits are in Swagger.</td></tr></tbody></table>
+<h2>Request examples</h2>
+<p>Fictional data. USER_UPDATED uses the full provisioning structure with a new event ID, the effective time of the change and the complete current account snapshot. To remove every role, send that full structure with <code>iPassRoles: []</code>.</p>
+<ac:structured-macro ac:name="expand" ac:schema-version="1"><ac:parameter ac:name="title">Full provisioning payload — two Pharos roles</ac:parameter><ac:rich-text-body><ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">json</ac:parameter><ac:plain-text-body><![CDATA[{
+  "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
+  "eventType": "USER_PROVISIONED",
+  "eventEffectiveAt": "2026-07-11T14:00:00Z",
+  "user": {
+    "employeeId": "WU100482",
+    "sourceSystem": "WORKDAY",
+    "firstName": "Arjun",
+    "middleName": null,
+    "lastName": "Sharma",
+    "email": "arjun.sharma@example.com",
+    "employmentStatus": "ACTIVE",
+    "hireDate": "2026-07-01",
+    "terminationDate": null,
+    "employmentType": "FTE",
+    "superiorOrganization": "Western Union",
+    "organizationId": "ORG-FCC-101",
+    "country": "USA",
+    "region": "North America",
+    "site": "Denver",
+    "supervisoryOrganization": "Financial Crime Compliance",
+    "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
+    "manager": {
+      "employeeId": "WU100210",
+      "name": "Maya R Patel"
+    },
+    "iPassRoles": [
+      {
+        "roleName": "APP_Pharos_Prod_KYC_Analyst",
+        "roleDescription": "KYC Analyst",
+        "assignedAt": "2026-07-11T14:00:00Z",
+        "assignmentStatus": "PROVISIONED",
+        "entitlementValue": "00g8n4q2r6T9vWxYz0h7",
+        "entitlementType": "groups",
+        "displayName": "KYC Analyst",
+        "isPharosGroup": true,
+        "isAvailableForRequest": true,
+        "isPrivileged": false
+      },
+      {
+        "roleName": "APP_Pharos_Prod_GSI_Analyst",
+        "roleDescription": "GSI Analyst",
+        "assignedAt": "2026-07-11T14:00:00Z",
+        "assignmentStatus": "PROVISIONED",
+        "entitlementValue": "00g9p5s3u7V2xYaBc0h7",
+        "entitlementType": "groups",
+        "displayName": "GSI Analyst",
+        "isPharosGroup": true,
+        "isAvailableForRequest": true,
+        "isPrivileged": false
+      }
+    ],
+    "employeeClass": "Employee",
+    "account": {
+      "application": "Okta",
+      "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
+    }
+  }
+}]]></ac:plain-text-body></ac:structured-macro></ac:rich-text-body></ac:structured-macro>
+<ac:structured-macro ac:name="expand" ac:schema-version="1"><ac:parameter ac:name="title">Minimal termination payload</ac:parameter><ac:rich-text-body><ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">json</ac:parameter><ac:plain-text-body><![CDATA[{
+  "eventId": "05e09592-7f11-4251-b523-91ac52a98364",
+  "eventType": "USER_TERMINATED",
+  "eventEffectiveAt": "2026-08-31T17:00:00Z",
+  "user": {
+    "employeeId": "WU100482",
+    "employmentStatus": "TERMINATED",
+    "terminationDate": "2026-08-31"
+  }
+}]]></ac:plain-text-body></ac:structured-macro></ac:rich-text-body></ac:structured-macro>
+<h2>Responses and delivery</h2>
+<p>HTTP 200 means the event was saved successfully or was already applied. An identical retry has no additional effect.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">json</ac:parameter><ac:plain-text-body><![CDATA[{
+  "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
+  "status": "SUCCESS"
+}]]></ac:plain-text-body></ac:structured-macro>
+<table><tbody><tr><th>Outcome</th><th>iPass action</th></tr><tr><td>200</td><td>Mark delivered.</td></tr><tr><td>400 / 422</td><td>Correct the invalid payload or business rule. Submit corrected content with a new event UUID.</td></tr><tr><td>409</td><td>Resolve the identity conflict, changed content under an existing UUID, or disallowed reactivation. Do not retry unchanged.</td></tr><tr><td>Timeout / connection failure / 500 / 503</td><td>Retry the same event UUID and unchanged payload with backoff. If retries fail, retain the event for investigation and replay.</td></tr></tbody></table>
+<p>Generate a new UUID for each new event. Reuse that UUID only for delivery of the identical event. Preserve event order per employee across all accounts, including retries. Pharos does not reject stale events automatically; do not replay an older snapshot after a newer one. Agree retry limits and urgent termination-failure escalation before go-live.</p>
+<p>Error JSON contains <code>timestamp</code>, <code>status</code>, <code>code</code>, <code>message</code> and <code>correlationId</code>. Use the message to resolve the failure; provide eventId and correlationId to Pharos support.</p>
+<h2>Verification APIs</h2>
+<table><tbody><tr><th>GET endpoint</th><th>Use</th></tr><tr><td><code>/api/v1/employees/{employeeId}</code></td><td>Current employee profile and account assignments.</td></tr><tr><td><code>/api/v1/employees/{employeeId}?includeHistory=true</code></td><td>Also include removed assignments.</td></tr><tr><td><code>/api/v1/ipass/events/{eventId}</code></td><td>Check the latest recorded processing outcome. APPLIED confirms processing; FAILED requires investigation.</td></tr></tbody></table>
+<p>These endpoints return 404 when the record is not found. A missing event record does not prove a timed-out request was never received; retry the unchanged event safely.</p>
+<h2>Interactive API reference</h2>
+<p>Swagger contains field definitions and examples for provisioning, updates, removals, contractors and restoration. “Try it out” sends real requests to the selected server.</p>
+<p><a href="{{PHAROS_BASE_URL}}/swagger-ui.html">Open Swagger</a> · <a href="{{PHAROS_BASE_URL}}/openapi/ipass.json">OpenAPI JSON</a></p>
+<ac:structured-macro ac:name="iframe" ac:schema-version="1"><ac:parameter ac:name="url">{{PHAROS_BASE_URL}}/swagger-ui.html</ac:parameter><ac:parameter ac:name="width">100%</ac:parameter><ac:parameter ac:name="height">900</ac:parameter><ac:parameter ac:name="scrolling">auto</ac:parameter></ac:structured-macro>

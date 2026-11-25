@@ -94,3 +94,7 @@ Confluence-ready overview: [API and data model](docs/confluence-api-data-model.m
 Source export “Owner” identifies the employee holding the account; role-owner data is not supplied. Manager is {employeeId, name}; employee email may be null or omitted. No home-email fallback is applied.
 
 A single employee may have multiple distinct source accounts. Each account has its own complete role snapshot. Environment is not part of the payload, database identity or role-name validation; ingestion does not determine QA/Prod authorization.
+
+## iPass integration handoff
+
+[Concise API handoff page](docs/ipass-handoff/README.md) · [Confluence publishing instructions](docs/ipass-handoff/PUBLISHING.md)
