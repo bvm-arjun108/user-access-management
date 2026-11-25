@@ -265,8 +265,8 @@ class EmployeeLifecycleIT {
         + "role_description,is_pharos_group,is_available_for_request,is_privileged FROM pharos_uam.ipass_role LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThatThrownBy(() -> jdbc.update(
-        "INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,assigned_at,assignment_event_id) "
-        + "SELECT account_id,role_id,assigned_at,assignment_event_id "
+        "INSERT INTO pharos_uam.okta_account_role_assignment(okta_account_id,role_id,assigned_at,assignment_event_id) "
+        + "SELECT okta_account_id,role_id,assigned_at,assignment_event_id "
         + "FROM pharos_uam.okta_account_role_assignment WHERE removed_at IS NULL LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThat(active()).isEqualTo(3);
@@ -275,8 +275,8 @@ class EmployeeLifecycleIT {
   @Test
   void assignmentRequiresAnExistingAccount() throws Exception {
     assertThat(post(initial).status()).isEqualTo(200);
-    assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.okta_account_role_assignment(account_id,role_id,assigned_at,assignment_event_id) "
-        + "SELECT ?,role_id,now(),? FROM pharos_uam.ipass_role LIMIT 1", UUID.randomUUID(),
+    assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.okta_account_role_assignment(okta_account_id,role_id,assigned_at,assignment_event_id) "
+        + "SELECT ?,role_id,now(),? FROM pharos_uam.ipass_role LIMIT 1", "00u-nonexistent",
         UUID.fromString(initial.get("eventId").asString())))
       .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
       .hasMessageContaining("fk_account_role_account");
@@ -346,7 +346,7 @@ class EmployeeLifecycleIT {
     }
     assertThat(post(restore).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(3);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment ar JOIN pharos_uam.okta_account a USING(account_id) WHERE a."
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment ar JOIN pharos_uam.okta_account a USING(okta_account_id) WHERE a."
         + "okta_account_id='00u-second' AND ar.removed_at IS NULL", Long.class))
       .isZero();
   }
@@ -371,7 +371,8 @@ class EmployeeLifecycleIT {
     JsonNode account = body.get("accounts").get(0);
     assertThat(account.get("assignments").size()).isEqualTo(3);
     UUID.fromString(account.get("assignments").get(0).get("assignmentId").asString());
-    assertThat(jdbc.queryForObject("SELECT account_id FROM pharos_uam.okta_account LIMIT 1", UUID.class)).isNotNull();
+    assertThat(jdbc.queryForObject("SELECT okta_account_id FROM pharos_uam.okta_account LIMIT 1", String.class))
+      .isEqualTo(initial.get("user").get("oktaAccountId").asString());
     assertThat(jdbc.queryForObject("SELECT role_id FROM pharos_uam.ipass_role LIMIT 1", UUID.class)).isNotNull();
     assertThat(response.body()).doesNotContain("permissionMappingStatus", "authorizationEligible", "permission_mapping_status");
     assertThat(account.get("assignments").get(0).has("owners")).isFalse();

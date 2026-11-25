@@ -17,7 +17,7 @@
         <mxCell id="5" value="POSTGRESQL 16   •   pharos_uam" style="text;html=0;align=right;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=15;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="1">
           <mxGeometry x="2040" y="44" width="500" height="28" as="geometry" />
         </mxCell>
-        <mxCell id="6" value="5 TABLES    /    62 COLUMNS    /    5 FOREIGN KEYS" style="text;html=0;align=right;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=14;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="1">
+        <mxCell id="6" value="5 TABLES    /    61 COLUMNS    /    5 FOREIGN KEYS" style="text;html=0;align=right;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=14;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="1">
           <mxGeometry x="1900" y="83" width="640" height="28" as="geometry" />
         </mxCell>
         <mxCell id="7" value="" style="rounded=0;fillColor=#D7E0E8;strokeColor=none;" vertex="1" parent="1">
@@ -408,7 +408,7 @@
           <mxGeometry x="454" y="0" width="40" height="28" as="geometry" />
         </mxCell>
         <mxCell id="172" value="" style="rounded=0;fillColor=#FFFFFF;strokeColor=#D2ECEE;container=1;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="700" y="260" width="500" height="232.0" as="geometry" />
+          <mxGeometry x="700" y="260" width="500" height="204.0" as="geometry" />
         </mxCell>
         <mxCell id="173" value="" style="rounded=0;fillColor=#176B73;strokeColor=none;" vertex="1" parent="172">
           <mxGeometry x="0" y="0" width="500" height="58" as="geometry" />
@@ -446,10 +446,10 @@
         <mxCell id="184" value="PK" style="html=0;align=center;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=10;fontColor=#9A681A;fontStyle=1;fillColor=#FFF3D6;rounded=1;arcSize=20;strokeColor=none;" vertex="1" parent="182">
           <mxGeometry x="29" y="5" width="45" height="18" as="geometry" />
         </mxCell>
-        <mxCell id="185" value="account_id" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=14;fontColor=#243C52;fontStyle=1;" vertex="1" parent="182">
+        <mxCell id="185" value="okta_account_id" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=14;fontColor=#243C52;fontStyle=1;" vertex="1" parent="182">
           <mxGeometry x="78" y="0" width="268" height="28" as="geometry" />
         </mxCell>
-        <mxCell id="186" value="uuid" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="182">
+        <mxCell id="186" value="text" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="182">
           <mxGeometry x="354" y="0" width="96" height="28" as="geometry" />
         </mxCell>
         <mxCell id="187" value="—" style="text;html=0;align=center;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=12;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="182">
@@ -473,26 +473,8 @@
         <mxCell id="193" value="—" style="text;html=0;align=center;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=12;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="188">
           <mxGeometry x="454" y="0" width="40" height="28" as="geometry" />
         </mxCell>
-        <mxCell id="206" value="" style="rounded=0;fillColor=#FFFFFF;strokeColor=none;" vertex="1" parent="172">
-          <mxGeometry x="0" y="148.0" width="500" height="28" as="geometry" />
-        </mxCell>
-        <mxCell id="207" value="" style="rounded=0;fillColor=#ECF0F4;strokeColor=none;" vertex="1" parent="206">
-          <mxGeometry x="0" y="27" width="500" height="1" as="geometry" />
-        </mxCell>
-        <mxCell id="208" value="" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=11;fontColor=#2D658A;fontStyle=1;" vertex="1" parent="206">
-          <mxGeometry x="12" y="0" width="62" height="28" as="geometry" />
-        </mxCell>
-        <mxCell id="209" value="okta_account_id" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=14;fontColor=#243C52;fontStyle=0;" vertex="1" parent="206">
-          <mxGeometry x="78" y="0" width="268" height="28" as="geometry" />
-        </mxCell>
-        <mxCell id="210" value="text" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="206">
-          <mxGeometry x="354" y="0" width="96" height="28" as="geometry" />
-        </mxCell>
-        <mxCell id="211" value="—" style="text;html=0;align=center;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=12;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="206">
-          <mxGeometry x="454" y="0" width="40" height="28" as="geometry" />
-        </mxCell>
         <mxCell id="212" value="" style="rounded=0;fillColor=#FFFFFF;strokeColor=none;" vertex="1" parent="172">
-          <mxGeometry x="0" y="176.0" width="500" height="28" as="geometry" />
+          <mxGeometry x="0" y="148.0" width="500" height="28" as="geometry" />
         </mxCell>
         <mxCell id="213" value="" style="rounded=0;fillColor=#ECF0F4;strokeColor=none;" vertex="1" parent="212">
           <mxGeometry x="0" y="27" width="500" height="1" as="geometry" />
@@ -510,7 +492,7 @@
           <mxGeometry x="454" y="0" width="40" height="28" as="geometry" />
         </mxCell>
         <mxCell id="218" value="" style="rounded=0;fillColor=#FFFFFF;strokeColor=none;" vertex="1" parent="172">
-          <mxGeometry x="0" y="204.0" width="500" height="28" as="geometry" />
+          <mxGeometry x="0" y="176.0" width="500" height="28" as="geometry" />
         </mxCell>
         <mxCell id="219" value="" style="rounded=0;fillColor=#ECF0F4;strokeColor=none;" vertex="1" parent="218">
           <mxGeometry x="0" y="27" width="500" height="1" as="geometry" />
@@ -1040,10 +1022,10 @@
         <mxCell id="470" value="FK" style="html=0;align=center;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=10;fontColor=#226B56;fontStyle=1;fillColor=#EEF8F2;rounded=1;arcSize=20;strokeColor=none;" vertex="1" parent="468">
           <mxGeometry x="29" y="5" width="45" height="18" as="geometry" />
         </mxCell>
-        <mxCell id="471" value="account_id" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=14;fontColor=#243C52;fontStyle=0;" vertex="1" parent="468">
+        <mxCell id="471" value="okta_account_id" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=14;fontColor=#243C52;fontStyle=0;" vertex="1" parent="468">
           <mxGeometry x="78" y="0" width="328" height="28" as="geometry" />
         </mxCell>
-        <mxCell id="472" value="uuid" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="468">
+        <mxCell id="472" value="text" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="468">
           <mxGeometry x="414" y="0" width="96" height="28" as="geometry" />
         </mxCell>
         <mxCell id="473" value="—" style="text;html=0;align=center;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=12;fontColor=#6C8093;fontStyle=0;" vertex="1" parent="468">
@@ -1241,19 +1223,19 @@
         <mxCell id="540" value="ACTIVE profile required; employee email may be null." style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">
           <mxGeometry x="80" y="1341.0" width="570" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="541" value="Internal UUIDs are generated by PostgreSQL." style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">
+        <mxCell id="541" value="Role/assignment UUIDs are generated by PostgreSQL." style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">
           <mxGeometry x="80" y="1370.0" width="570" height="26" as="geometry" />
         </mxCell>
         <mxCell id="542" value="FOREIGN KEYS" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=12;fontColor=#142E46;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="700" y="1242.0" width="570" height="24" as="geometry" />
         </mxCell>
-        <mxCell id="543" value="Account FK: account_id" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">
+        <mxCell id="543" value="Account FK: okta_account_id" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">
           <mxGeometry x="700" y="1283.0" width="570" height="26" as="geometry" />
         </mxCell>
         <mxCell id="544" value="Role FK: role_id" style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">
           <mxGeometry x="700" y="1312.0" width="570" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="545" value="Assignments reference account_id and role_id." style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">
+        <mxCell id="545" value="Assignments reference okta_account_id and role_id." style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">
           <mxGeometry x="700" y="1341.0" width="570" height="26" as="geometry" />
         </mxCell>
         <mxCell id="546" value="All five foreign keys use ON DELETE RESTRICT." style="text;html=0;align=left;verticalAlign=middle;spacing=0;fontFamily=Helvetica;fontSize=13;fontColor=#52677C;fontStyle=0;" vertex="1" parent="1">

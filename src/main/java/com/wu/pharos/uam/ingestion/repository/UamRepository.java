@@ -109,9 +109,9 @@ public class UamRepository {
           .addValue("date", d == null || d.isNull() ? null : EventValidator.date(e.user(), "terminationDate")));
   }
 
-  public UUID saveAccount(EmployeeEvent e) {
-    List<UUID> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "external",
-        e.user().get("oktaAccountId").asString()), (rs, i) -> rs.getObject(1, UUID.class));
+  public String saveAccount(EmployeeEvent e) {
+    List<String> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "external",
+        e.user().get("oktaAccountId").asString()), (rs, i) -> rs.getString(1));
     if (result.isEmpty()) {
       throw ApiException.conflict("ACCOUNT_IDENTITY_CONFLICT", "Account is already linked to a different employee");
     }
@@ -137,7 +137,7 @@ public class UamRepository {
     return result.getFirst();
   }
 
-  public void retainOrCreateAssignment(EmployeeEvent e, UUID account, UUID role, JsonNode source) {
+  public void retainOrCreateAssignment(EmployeeEvent e, String account, UUID role, JsonNode source) {
     Instant assigned = EventValidator.timestamp(source, "assignedAt").truncatedTo(ChronoUnit.MICROS);
     List<Instant> existing = jdbc.query(sql.load("assignment/current"), Map.of("account", account, "role", role), (rs, i) -> rs
       .getObject(1, OffsetDateTime.class)
@@ -155,7 +155,7 @@ public class UamRepository {
           .addValue("event", e.eventId()));
   }
 
-  public void reconcile(EmployeeEvent e, UUID account) {
+  public void reconcile(EmployeeEvent e, String account) {
     jdbc.update(sql.load("assignment/reconcile"),
         Map.of("account", account, "event", e.eventId(), "roles", e.user().get("iPassRoles").toString()));
   }

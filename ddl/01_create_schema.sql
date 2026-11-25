@@ -48,12 +48,10 @@ CREATE TABLE pharos_uam.employee (
 );
 
 CREATE TABLE pharos_uam.okta_account (
-account_id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     employee_id         TEXT NOT NULL REFERENCES pharos_uam.employee(employee_id) ON DELETE RESTRICT,
-    okta_account_id TEXT NOT NULL CHECK (btrim(okta_account_id) <> ''),
+    okta_account_id TEXT PRIMARY KEY CHECK (btrim(okta_account_id) <> ''),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT uq_account_okta UNIQUE(okta_account_id)
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
 );
 
 CREATE TABLE pharos_uam.ipass_role (
@@ -98,15 +96,15 @@ CREATE TABLE pharos_uam.ipass_event (
 
 CREATE TABLE pharos_uam.okta_account_role_assignment (
 assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    account_id          UUID NOT NULL,
+    okta_account_id     TEXT NOT NULL,
     role_id             UUID NOT NULL,
     assigned_at         TIMESTAMPTZ NOT NULL,
     removed_at          TIMESTAMPTZ,
     assignment_event_id    UUID NOT NULL REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
     removal_event_id    UUID REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT fk_account_role_account FOREIGN KEY(account_id)
-        REFERENCES pharos_uam.okta_account(account_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_account_role_account FOREIGN KEY(okta_account_id)
+        REFERENCES pharos_uam.okta_account(okta_account_id) ON DELETE RESTRICT,
     CONSTRAINT fk_account_role_role FOREIGN KEY(role_id)
         REFERENCES pharos_uam.ipass_role(role_id) ON DELETE RESTRICT,
     CONSTRAINT ck_account_role_removal CHECK (
@@ -115,6 +113,6 @@ assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     )
 );
 
-CREATE UNIQUE INDEX uq_account_role_current ON pharos_uam.okta_account_role_assignment(account_id,role_id) WHERE removed_at IS NULL;
+CREATE UNIQUE INDEX uq_account_role_current ON pharos_uam.okta_account_role_assignment(okta_account_id,role_id) WHERE removed_at IS NULL;
 
 COMMIT;
