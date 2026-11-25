@@ -146,18 +146,8 @@ Generate a new UUID for each new event. Reuse that UUID only for delivery of the
 
 Error JSON contains `timestamp`, `status`, `code`, `message` and `correlationId`. Use the message to resolve the failure; provide eventId and correlationId to Pharos support.
 
-## Verification APIs
-
-| GET endpoint | Use |
-| --- | --- |
-| `/api/v1/employees/{employeeId}` | Current employee profile and account assignments. |
-| `/api/v1/employees/{employeeId}?includeHistory=true` | Also include removed assignments. |
-| `/api/v1/ipass/events/{eventId}` | Check the latest recorded processing outcome. APPLIED confirms processing; FAILED requires investigation. |
-
-These endpoints return 404 when the record is not found. A missing event record does not prove a timed-out request was never received; retry the unchanged event safely.
-
 ## Interactive API reference
 
-Browse endpoints, schemas and payload examples in the OpenAPI macro on this Confluence page. The macro reads the attached `pharos-ipass.openapi.json`; readers do not need a running Pharos application.
+Browse the POST endpoint, schemas and payload examples in the OpenAPI macro on this Confluence page. The macro reads the attached `pharos-ipass.openapi.json`; readers do not need a running Pharos application.
 
 API execution is disabled for contract review. “Try it out” requires a reachable API endpoint and agreed authentication.

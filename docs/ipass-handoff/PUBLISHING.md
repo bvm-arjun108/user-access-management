@@ -6,14 +6,14 @@ The interactive API reference is rendered inside Confluence from a page attachme
 
 - `README.md`: concise handoff content.
 - `confluence-page.storage.xhtml`: Atlassian storage body with Expand and Code macros; an insertion point for the installed OpenAPI macro.
-- `pharos-ipass.openapi.json`: self-contained contract to attach to the page. Schemas and examples match the application contract; its server is a deliberately non-resolving `.invalid` address for documentation review.
+- `pharos-ipass.openapi.json`: self-contained POST-only contract to attach to the page. Schemas and examples match the application contract; its server is a deliberately non-resolving `.invalid` address for documentation review.
 
 ## Publish
 
 1. Create the page from the README, or use the XHTML with an approved publisher supporting Confluence `storage` format. Raw XHTML cannot be pasted into the normal editor.
 2. Attach `pharos-ipass.openapi.json` to the page.
 3. Insert your installed OpenAPI/Swagger app macro under **Interactive API reference** and select this page attachment as its source. Use its attachment or pasted-spec mode, not a URL to the running application.
-4. Disable request execution (“Try it out”) in the macro settings. Verify that readers can expand endpoints, inspect schemas and select examples. Remove the publisher setup paragraph.
+4. Disable request execution (“Try it out”) in the macro settings. Verify that readers can expand the POST endpoint, inspect schemas and select examples. Remove the publisher setup paragraph.
 5. Keep the endpoint placeholder until the shared API address is agreed. Authentication, retry limits and termination-failure escalation also remain integration agreements.
 
 ## Required Confluence capability
@@ -26,4 +26,4 @@ The contract can be reviewed without API access. Actual API calls require a shar
 
 ## Updating the contract
 
-Regenerate the attachment from `../../src/main/resources/static/openapi/ipass.json` when the contract changes, retaining the documentation-only server until API execution is enabled deliberately. Replace the same Confluence attachment to update the documentation.
+Extract only `POST /api/v1/ipass/events` and its referenced components from `../../src/main/resources/static/openapi/ipass.json` when the contract changes, retaining the documentation-only server until API execution is enabled deliberately. Replace the same Confluence attachment to update the documentation.

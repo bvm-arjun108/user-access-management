@@ -1023,97 +1023,6 @@
           }
         }
       }
-    },
-    "/api/v1/employees/{employeeId}": {
-      "get": {
-        "tags": [
-          "Ingestion verification"
-        ],
-        "summary": "Read employee details and current assignments",
-        "parameters": [
-          {
-            "name": "employeeId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "includeHistory",
-            "in": "query",
-            "required": false,
-            "description": "Include removed role assignments alongside current assignments.",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Employee profile and current assignments",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmployeeState"
-                }
-              }
-            },
-            "headers": {
-              "X-Correlation-ID": {
-                "$ref": "#/components/headers/CorrelationId"
-              }
-            }
-          },
-          "404": {
-            "description": "Employee not found",
-            "headers": {
-              "X-Correlation-ID": {
-                "$ref": "#/components/headers/CorrelationId"
-              }
-            }
-          }
-        },
-        "description": "Returns current assignments by default. Set includeHistory=true to include removed assignments. Accounts remain present when their assignments array is empty."
-      }
-    },
-    "/api/v1/ipass/events/{eventId}": {
-      "get": {
-        "tags": [
-          "Ingestion verification"
-        ],
-        "summary": "Read processing result without the HR payload",
-        "parameters": [
-          {
-            "name": "eventId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Stored event result",
-            "headers": {
-              "X-Correlation-ID": {
-                "$ref": "#/components/headers/CorrelationId"
-              }
-            }
-          },
-          "404": {
-            "description": "Event not found",
-            "headers": {
-              "X-Correlation-ID": {
-                "$ref": "#/components/headers/CorrelationId"
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -1667,36 +1576,6 @@
           "correlationId": {
             "type": "string",
             "format": "uuid"
-          }
-        }
-      },
-      "EmployeeState": {
-        "type": "object",
-        "properties": {
-          "employee": {
-            "type": "object",
-            "description": "Stored employee profile using database column names."
-          },
-          "accounts": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "oktaAccountId": {
-                  "type": "string"
-                },
-                "application": {
-                  "type": "string"
-                },
-                "assignments": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  },
-                  "description": "Current assignments by default; includeHistory=true also returns removed assignments. assignmentStatus and removedAt distinguish current and removed assignments."
-                }
-              }
-            }
           }
         }
       },
