@@ -27,3 +27,13 @@ The contract can be reviewed without API access. Actual API calls require a shar
 ## Updating the contract
 
 Extract only `POST /api/v1/ipass/events` and its referenced components from `../../src/main/resources/static/openapi/ipass.json` when the contract changes, retaining the documentation-only server until API execution is enabled deliberately. Replace the same Confluence attachment to update the documentation.
+
+## Check the rendered schema
+
+Replace the existing `pharos-ipass.openapi.json` attachment with the updated file and refresh the macro. Confirm the macro references this POST-only attachment.
+
+The request schema has three alternatives selected by `eventType`: USER_PROVISIONED, USER_UPDATED and USER_TERMINATED. Some renderers keep the example dropdown and schema selector separate; selecting an example may not switch the schema tab automatically. Select the matching event schema when comparing them.
+
+Provisioning requires at least one role. Updates allow an empty role list. Termination shows only employeeId, employmentStatus and optional terminationDate under user. Responses are 200, 400 and 500.
+
+The current profile uses flat `user.oktaAccountId`, `employeeClass`, `companyName`, `businessUnit`, `city`, separate manager names, `jobDetails` and optional `supplier`. Replace the existing attachment and page body together after contract changes. Internal GET endpoints and database diagrams are maintained in the Pharos documentation, outside the iPass handoff.

@@ -25,10 +25,10 @@ public class ApiException extends RuntimeException {
   }
 
   public static ApiException rule(String message) {
-    return new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "INVALID_STATE", message);
+    return new ApiException(HttpStatus.BAD_REQUEST, "INVALID_STATE", message);
   }
 
   public static ApiException conflict(String code, String message) {
-    return new ApiException(HttpStatus.CONFLICT, code, message);
+    return new ApiException(HttpStatus.BAD_REQUEST, code, message);
   }
 }

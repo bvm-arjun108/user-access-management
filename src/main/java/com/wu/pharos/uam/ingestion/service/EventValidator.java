@@ -21,12 +21,12 @@ import tools.jackson.databind.JsonNode;
 public class EventValidator {
   private static final Set<String> ENVELOPE = Set.of("eventId", "eventType", "eventEffectiveAt", "user");
   private static final Set<String> PROFILE = Set.of("employeeId", "sourceSystem", "firstName", "middleName", "lastName", "email",
-      "employmentStatus", "hireDate", "terminationDate", "employmentType", "employeeClass", "account", "superiorOrganization",
-      "organizationId", "country", "region", "site", "supervisoryOrganization", "employeeLastSyncedAt", "manager", "iPassRoles");
-  private static final Set<String> MANAGER = Set.of("employeeId", "name");
+      "employmentStatus", "hireDate", "terminationDate", "employeeClass", "oktaAccountId", "companyName", "country", "businessUnit", "city",
+      "employeeLastSyncedAt", "manager", "iPassRoles", "jobDetails", "supplier");
+  private static final Set<String> JOB = Set.of("department", "jobCode", "jobTitle", "jobFamilyGroup", "jobFamily");
+  private static final Set<String> MANAGER = Set.of("employeeId", "firstName", "middleName", "lastName");
   private static final Set<String> ROLE = Set.of("entitlementValue", "entitlementType", "roleName", "displayName", "roleDescription",
       "isPharosGroup", "isAvailableForRequest", "isPrivileged", "assignedAt", "assignmentStatus");
-  private static final Set<String> ACCOUNT = Set.of("application", "oktaAccountId");
   private final Clock clock;
   private final Validator validator;
 
@@ -72,7 +72,7 @@ public class EventValidator {
       // Incomplete manager/profile/role data must not prevent revocation.
       return;
     }
-    fields(user, PROFILE, "user", Set.of("email"));
+    fields(user, PROFILE, "user", Set.of("email", "supplier"));
     if (!"ACTIVE".equals(text(user, "employmentStatus"))) {
       throw rule("Provisioning and updates require ACTIVE employment status");
     }
@@ -83,7 +83,9 @@ public class EventValidator {
       throw invalid("sourceSystem must be WORKDAY or VNDLY");
     }
     for (String field : PROFILE) {
-      if (!Set.of("middleName", "terminationDate", "manager", "account", "iPassRoles", "email").contains(field)) {
+      if (!Set
+        .of("middleName", "terminationDate", "manager", "oktaAccountId", "iPassRoles", "email", "jobDetails", "supplier")
+        .contains(field)) {
         text(user, field);
       }
     }
@@ -91,19 +93,26 @@ public class EventValidator {
     if (user.hasNonNull("email")) {
       email(user, "email");
     }
+    if (user.hasNonNull("supplier")) {
+      text(user, "supplier");
+    }
     LocalDate hire = date(user, "hireDate");
     if (hire.isAfter(event.eventEffectiveAt().atOffset(java.time.ZoneOffset.UTC).toLocalDate())) {
       throw rule("hireDate cannot follow the effective event date");
     }
     timestamp(user, "employeeLastSyncedAt");
+    JsonNode job = user.get("jobDetails");
+    fields(job, JOB, "jobDetails");
+    for (String field : JOB) {
+      nullableText(job, field);
+    }
     JsonNode manager = user.get("manager");
     fields(manager, MANAGER, "manager");
     identifier(manager, "employeeId");
-    text(manager, "name");
-    JsonNode account = user.get("account");
-    fields(account, ACCOUNT, "account");
-    identifier(account, "application");
-    identifier(account, "oktaAccountId");
+    text(manager, "firstName");
+    nullableText(manager, "middleName");
+    text(manager, "lastName");
+    identifier(user, "oktaAccountId");
     JsonNode roles = user.get("iPassRoles");
     if (!roles.isArray()) {
       throw invalid("iPassRoles must be an array; use [] to remove all roles");

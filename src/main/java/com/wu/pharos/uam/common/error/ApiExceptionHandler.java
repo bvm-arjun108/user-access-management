@@ -29,7 +29,7 @@ public class ApiExceptionHandler {
 
   @ExceptionHandler(DataAccessException.class)
   ResponseEntity<ApiError> database(DataAccessException e) {
-    return response(HttpStatus.SERVICE_UNAVAILABLE, "DATABASE_UNAVAILABLE", "Database operation failed; retry the same event");
+    return response(HttpStatus.INTERNAL_SERVER_ERROR, "DATABASE_UNAVAILABLE", "Database operation failed; retry the same event");
   }
 
   @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)

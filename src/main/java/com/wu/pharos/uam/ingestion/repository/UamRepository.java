@@ -40,13 +40,11 @@ public class UamRepository {
       .addValue("employee", e.employeeId())
       .addValue("occurred", OffsetDateTime.ofInstant(e.eventEffectiveAt(), java.time.ZoneOffset.UTC))
       .addValue("payload", e.payload().toString())
-      .addValue("application", optionalAccountField(e, "application"))
-      .addValue("oktaAccount", optionalAccountField(e, "oktaAccountId"));
+      .addValue("oktaAccount", optionalAccountId(e));
   }
 
-  private String optionalAccountField(EmployeeEvent e, String field) {
-    JsonNode a = e.user().get("account");
-    JsonNode value = a != null && a.isObject() ? a.get(field) : null;
+  private String optionalAccountId(EmployeeEvent e) {
+    JsonNode value = e.user().get("oktaAccountId");
     return value != null && value.isString() ? value.asString() : null;
   }
 
@@ -81,9 +79,8 @@ public class UamRepository {
     Map<String, Object> p = new LinkedHashMap<>();
     String[][] fields = {{"employeeId", "employee_id"}, {"sourceSystem", "source_system"}, {"firstName", "first_name"},
         {"middleName", "middle_name"}, {"lastName", "last_name"}, {"email", "email"}, {"employmentStatus", "employment_status"},
-        {"employmentType", "employment_type"}, {"employeeClass", "employee_class"}, {"superiorOrganization", "superior_organization"},
-        {"organizationId", "organization_id"}, {"country", "country"}, {"region", "region"},
-        {"site", "site"}, {"supervisoryOrganization", "supervisory_organization"}};
+        {"employeeClass", "employee_class"}, {"supplier", "supplier"}, {"companyName", "company_name"}, {"country", "country"},
+        {"businessUnit", "business_unit"}, {"city", "city"}};
     for (String[] field : fields) {
       p.put(field[1], !u.hasNonNull(field[0]) ? null : u.get(field[0]).asString());
     }
@@ -91,9 +88,16 @@ public class UamRepository {
     p.put("termination_date", null);
     p.put("employee_last_synced_at", OffsetDateTime.ofInstant(EventValidator.timestamp(u, "employeeLastSyncedAt"), java.time.ZoneOffset.UTC));
     JsonNode m = u.get("manager");
-    String[][] manager = {{"employeeId", "manager_employee_id"}, {"name", "manager_name"}};
+    String[][] manager = {{"employeeId", "manager_employee_id"}, {"firstName", "manager_first_name"},
+        {"middleName", "manager_middle_name"}, {"lastName", "manager_last_name"}};
     for (String[] field : manager) {
       p.put(field[1], m.get(field[0]).isNull() ? null : m.get(field[0]).asString());
+    }
+    JsonNode job = u.get("jobDetails");
+    String[][] jobFields = {{"department", "department"}, {"jobCode", "job_code"}, {"jobTitle", "job_title"},
+        {"jobFamilyGroup", "job_family_group"}, {"jobFamily", "job_family"}};
+    for (String[] field : jobFields) {
+      p.put(field[1], job.get(field[0]).isNull() ? null : job.get(field[0]).asString());
     }
     jdbc.update(sql.load("employee/upsert"), p);
   }
@@ -106,9 +110,8 @@ public class UamRepository {
   }
 
   public UUID saveAccount(EmployeeEvent e) {
-    JsonNode a = e.user().get("account");
-    List<UUID> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "application",
-        a.get("application").asString(), "external", a.get("oktaAccountId").asString()), (rs, i) -> rs.getObject(1, UUID.class));
+    List<UUID> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "external",
+        e.user().get("oktaAccountId").asString()), (rs, i) -> rs.getObject(1, UUID.class));
     if (result.isEmpty()) {
       throw ApiException.conflict("ACCOUNT_IDENTITY_CONFLICT", "Account is already linked to a different employee");
     }
@@ -118,7 +121,7 @@ public class UamRepository {
   public record RoleRow(UUID id) {}
 
   public RoleRow upsertRole(JsonNode r, EmployeeEvent e) {
-    var p = new MapSqlParameterSource("application", e.user().get("account").get("application").asString())
+    var p = new MapSqlParameterSource()
       .addValue("entitlement", r.get("entitlementValue").asString())
       .addValue("entitlementType", r.get("entitlementType").asString())
       .addValue("name", r.get("roleName").asString())
@@ -148,7 +151,6 @@ public class UamRepository {
     jdbc.update(sql.load("assignment/create"),
         new MapSqlParameterSource("account", account)
           .addValue("role", role)
-          .addValue("application", e.user().get("account").get("application").asString())
           .addValue("assigned", OffsetDateTime.ofInstant(assigned, java.time.ZoneOffset.UTC))
           .addValue("event", e.eventId()));
   }

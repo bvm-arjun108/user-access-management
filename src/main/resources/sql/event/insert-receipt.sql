@@ -1,2 +1,2 @@
-INSERT INTO pharos_uam.ipass_event(event_id,event_type,employee_id,application,okta_account_id,event_effective_at,payload)
-VALUES (:id,:type,:employee,:application,:oktaAccount,:occurred,CAST(:payload AS jsonb)) ON CONFLICT(event_id) DO NOTHING
+INSERT INTO pharos_uam.ipass_event(event_id,event_type,employee_id,okta_account_id,event_effective_at,payload)
+VALUES (:id,:type,:employee,:oktaAccount,:occurred,CAST(:payload AS jsonb)) ON CONFLICT(event_id) DO NOTHING

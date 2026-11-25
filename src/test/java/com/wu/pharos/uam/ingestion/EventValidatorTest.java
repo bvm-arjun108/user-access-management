@@ -108,8 +108,8 @@ class EventValidatorTest {
 
   @Test
   void accountIsRequired() {
-    ((ObjectNode) payload.get("user")).remove("account");
-    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("account");
+    ((ObjectNode) payload.get("user")).remove("oktaAccountId");
+    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("oktaAccountId");
   }
 
   @Test
@@ -142,16 +142,38 @@ class EventValidatorTest {
   }
 
   @Test
-  void managerNameIsRequiredAndNotSplit() {
-    ((ObjectNode) payload.get("user").get("manager")).put("name", "Maya van der Patel");
+  void managerNamesPreserveCompoundLastNameAndAllowNullMiddleName() {
+    ((ObjectNode) payload.get("user").get("manager")).put("lastName", "van der Patel").putNull("middleName");
     assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
-    ((ObjectNode) payload.get("user").get("manager")).remove("name");
-    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("name");
+    ((ObjectNode) payload.get("user").get("manager")).remove("firstName");
+    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("firstName");
   }
 
   @Test
   void sourceRoleNameDoesNotNeedEnvironmentOrPharosNamingConvention() {
     ((ObjectNode) payload.get("user").get("iPassRoles").get(0)).put("roleName", "Pharos Standard Investigator");
     assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
+  }
+
+  @Test
+  void jobFieldsAllowNullButRequireAllKeys() {
+    ObjectNode job = (ObjectNode) payload.get("user").get("jobDetails");
+    job.putNull("department").putNull("jobCode").putNull("jobTitle").putNull("jobFamilyGroup").putNull("jobFamily");
+    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
+    job.remove("jobCode");
+    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("jobCode");
+  }
+
+  @Test
+  void supplierIsOptionalAndAcceptsOnlyNonblankTextOrNull() {
+    ObjectNode user = (ObjectNode) payload.get("user");
+    user.remove("supplier");
+    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
+    user.putNull("supplier");
+    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
+    user.put("supplier", "Example Technology Services");
+    assertThatCode(() -> validator.validate(validator.envelope(payload))).doesNotThrowAnyException();
+    user.put("supplier", " ");
+    assertThatThrownBy(() -> validator.validate(validator.envelope(payload))).hasMessageContaining("supplier");
   }
 }

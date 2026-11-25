@@ -25,22 +25,37 @@ Do not send hires without Pharos access, pending requests or unrelated applicati
 
 | Rule | Requirement |
 | --- | --- |
-| Account scope | One employee and one account per provisioning/update call. Send separate calls for distinct Okta accounts. |
+| Account scope | One employee and one oktaAccountId per provisioning/update call. Send separate calls for distinct Okta accounts. |
 | Complete role list | `user.iPassRoles` contains all current Pharos roles for that account. Omitted roles are removed. Missing/null is rejected. Maximum 500 roles. |
-| Identity | Employee: `employeeId` (source Owner ID). Account: `application` + `oktaAccountId`. Role: `application` + `entitlementValue`. Keep identifiers stable and preserve their case. |
+| Identity | Employee: `employeeId` (source Owner ID). Account: `oktaAccountId`. Role: `entitlementValue`. Keep identifiers stable and preserve their case. |
 | Environment / owners | No environment field or inference. Source Owner First/Last describe the employee; role owners are not supplied. |
-| Employee fields | Use every field in the full example. Only `email` may be omitted; it may also be null. `middleName` may be null. ACTIVE requires `terminationDate: null`. Manager ID and full name are required. |
+| Employee fields | Use every field in the full example. `email` and `supplier` may be omitted or null; either clears its saved value in a full update. `middleName` may be null. ACTIVE requires `terminationDate: null`. Manager ID, first name and last name are required; manager middleName is required but may be null. |
 | Role fields | Every shown role field is required. `assignmentStatus` is always PROVISIONED; `isPharosGroup` must be true. Send JSON booleans, not strings. Requestability/privilege flags are metadata. |
 | Dates | Dates: YYYY-MM-DD. Timestamps: RFC 3339 with timezone. `eventEffectiveAt` is when the change took effect; `employeeLastSyncedAt` is when iPass refreshed employee details from Workday/VNDLY. |
 | Assignment time | `assignedAt` is the original start of the current assignment. Preserve it while membership continues; it cannot follow `eventEffectiveAt`. |
 | Validation | Send nonblank strings without surrounding whitespace. Do not send future-effective changes. Full field types and limits are in Swagger. |
 
+The jobDetails object contains department, jobCode, jobTitle, jobFamilyGroup and jobFamily. Include all five keys; use null for unavailable values. A null value clears the previously stored value.
+
+supplier is the contractor supplier name from iPass. It is optional and may be null; missing/null clears the stored supplier in a full profile update.
+
 ## Request examples
+
+The Swagger example selector contains these six cases. Each is a complete request.
+
+| Use case | Event type | Expected result |
+| --- | --- | --- |
+| First Pharos access | `USER_PROVISIONED` | Create the employee and account with the complete approved role list. |
+| Remove one role | `USER_UPDATED` | Omit GSI; retain every other current role for this account. |
+| Add a role | `USER_UPDATED` | Include GDD together with every existing current role for this account. |
+| Remove all roles | `USER_UPDATED` | Send iPassRoles: []; employment remains ACTIVE and the account has no current roles. |
+| Terminate employee | `USER_TERMINATED` | Close current assignments across all employee accounts immediately. |
+| Restore access after termination correction | `USER_PROVISIONED` | Send the approved ACTIVE profile and current roles for the account being restored. |
 
 Fictional data. USER_UPDATED uses the full provisioning structure with a new event ID, the effective time of the change and the complete current account snapshot. To remove every role, send that full structure with `iPassRoles: []`.
 
 <details>
-<summary>Full provisioning payload — two Pharos roles</summary>
+<summary>Full provisioning payload — KYC, GSI and BKYC roles</summary>
 
 ```json
 {
@@ -57,17 +72,16 @@ Fictional data. USER_UPDATED uses the full provisioning structure with a new eve
     "employmentStatus": "ACTIVE",
     "hireDate": "2026-07-01",
     "terminationDate": null,
-    "employmentType": "FTE",
-    "superiorOrganization": "Western Union",
-    "organizationId": "ORG-FCC-101",
+    "companyName": "Western Union",
     "country": "USA",
-    "region": "North America",
-    "site": "Denver",
-    "supervisoryOrganization": "Financial Crime Compliance",
+    "businessUnit": "North America",
+    "city": "Denver",
     "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
     "manager": {
       "employeeId": "WU100210",
-      "name": "Maya R Patel"
+      "firstName": "Maya",
+      "middleName": "R",
+      "lastName": "Patel"
     },
     "iPassRoles": [
       {
@@ -93,13 +107,30 @@ Fictional data. USER_UPDATED uses the full provisioning structure with a new eve
         "isPharosGroup": true,
         "isAvailableForRequest": true,
         "isPrivileged": false
+      },
+      {
+        "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+        "roleDescription": "BKYC Analyst",
+        "assignedAt": "2026-07-11T14:00:00Z",
+        "assignmentStatus": "PROVISIONED",
+        "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
+        "entitlementType": "groups",
+        "displayName": "BKYC Analyst",
+        "isPharosGroup": true,
+        "isAvailableForRequest": true,
+        "isPrivileged": false
       }
     ],
     "employeeClass": "Employee",
-    "account": {
-      "application": "Okta",
-      "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
-    }
+    "jobDetails": {
+      "department": "Financial Crime Compliance",
+      "jobCode": "2726T",
+      "jobTitle": "Senior Analyst AML Compliance",
+      "jobFamilyGroup": "Compliance",
+      "jobFamily": "AML/CPCE Compliance Global Operations"
+    },
+    "supplier": null,
+    "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
   }
 }
 ```
@@ -126,17 +157,16 @@ GSI is omitted from the complete account role list. Pharos removes that assignme
     "employmentStatus": "ACTIVE",
     "hireDate": "2026-07-01",
     "terminationDate": null,
-    "employmentType": "FTE",
-    "superiorOrganization": "Western Union",
-    "organizationId": "ORG-FCC-101",
+    "companyName": "Western Union",
     "country": "USA",
-    "region": "North America",
-    "site": "Denver",
-    "supervisoryOrganization": "Financial Crime Compliance",
+    "businessUnit": "North America",
+    "city": "Denver",
     "employeeLastSyncedAt": "2026-07-17T10:00:00Z",
     "manager": {
       "employeeId": "WU100210",
-      "name": "Maya R Patel"
+      "firstName": "Maya",
+      "middleName": "R",
+      "lastName": "Patel"
     },
     "iPassRoles": [
       {
@@ -165,10 +195,15 @@ GSI is omitted from the complete account role list. Pharos removes that assignme
       }
     ],
     "employeeClass": "Employee",
-    "account": {
-      "application": "Okta",
-      "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
-    }
+    "jobDetails": {
+      "department": "Financial Crime Compliance",
+      "jobCode": "2726T",
+      "jobTitle": "Senior Analyst AML Compliance",
+      "jobFamilyGroup": "Compliance",
+      "jobFamily": "AML/CPCE Compliance Global Operations"
+    },
+    "supplier": null,
+    "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
   }
 }
 ```
@@ -207,9 +242,8 @@ HTTP 200 means the event was saved successfully or was already applied. An ident
 | Outcome | iPass action |
 | --- | --- |
 | 200 | Mark delivered. |
-| 400 / 422 | Correct the invalid payload or business rule. Submit corrected content with a new event UUID. |
-| 409 | Resolve the identity conflict, changed content under an existing UUID, or disallowed reactivation. Do not retry unchanged. |
-| Timeout / connection failure / 500 / 503 | Retry the same event UUID and unchanged payload with backoff. If retries fail, retain the event for investigation and replay. |
+| 400 | Resolve the invalid payload, identity conflict or business rule. Submit corrected content with a new event UUID. |
+| Timeout / connection failure / 500 | Retry the same event UUID and unchanged payload with backoff. If retries fail, retain the event for investigation and replay. |
 
 Generate a new UUID for each new event. Reuse that UUID only for delivery of the identical event. Preserve event order per employee across all accounts, including retries. Pharos does not reject stale events automatically; do not replay an older snapshot after a newer one. Agree retry limits and urgent termination-failure escalation before go-live.
 

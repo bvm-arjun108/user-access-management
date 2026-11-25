@@ -14,15 +14,20 @@ CREATE TABLE pharos_uam.employee (
     hire_date                   DATE,
     termination_date            DATE,
     employee_class              TEXT CHECK (btrim(employee_class) <> ''),
-    employment_type             TEXT CHECK (btrim(employment_type) <> ''),
-    superior_organization       TEXT CHECK (btrim(superior_organization) <> ''),
-    organization_id             TEXT CHECK (btrim(organization_id) <> ''),
+    company_name       TEXT CHECK (btrim(company_name) <> ''),
     country                     TEXT CHECK (btrim(country) <> ''),
-    region                      TEXT CHECK (btrim(region) <> ''),
-    site                        TEXT CHECK (btrim(site) <> ''),
-    supervisory_organization    TEXT CHECK (btrim(supervisory_organization) <> ''),
+    business_unit                      TEXT CHECK (btrim(business_unit) <> ''),
+    city                        TEXT CHECK (btrim(city) <> ''),
     manager_employee_id         TEXT CHECK (btrim(manager_employee_id) <> ''),
-    manager_name                TEXT CHECK (btrim(manager_name) <> ''),
+    manager_first_name          TEXT CHECK (btrim(manager_first_name) <> ''),
+    manager_middle_name         TEXT CHECK (manager_middle_name IS NULL OR btrim(manager_middle_name) <> ''),
+    manager_last_name           TEXT CHECK (btrim(manager_last_name) <> ''),
+    supplier TEXT CHECK (supplier IS NULL OR btrim(supplier) <> ''),
+    department TEXT CHECK (department IS NULL OR btrim(department) <> ''),
+    job_code TEXT CHECK (job_code IS NULL OR btrim(job_code) <> ''),
+    job_title TEXT CHECK (job_title IS NULL OR btrim(job_title) <> ''),
+    job_family_group TEXT CHECK (job_family_group IS NULL OR btrim(job_family_group) <> ''),
+    job_family TEXT CHECK (job_family IS NULL OR btrim(job_family) <> ''),
     employee_last_synced_at       TIMESTAMPTZ,
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
@@ -33,11 +38,11 @@ CREATE TABLE pharos_uam.employee (
         employment_status <> 'ACTIVE' OR (
             termination_date IS NULL AND source_system IS NOT NULL
             AND first_name IS NOT NULL AND last_name IS NOT NULL
-            AND hire_date IS NOT NULL AND employment_type IS NOT NULL AND employee_class IS NOT NULL
-            AND superior_organization IS NOT NULL AND organization_id IS NOT NULL
-            AND country IS NOT NULL AND region IS NOT NULL AND site IS NOT NULL
-            AND supervisory_organization IS NOT NULL AND employee_last_synced_at IS NOT NULL
-            AND manager_employee_id IS NOT NULL AND manager_name IS NOT NULL
+            AND hire_date IS NOT NULL AND employee_class IS NOT NULL
+            AND company_name IS NOT NULL
+            AND country IS NOT NULL AND business_unit IS NOT NULL AND city IS NOT NULL
+            AND employee_last_synced_at IS NOT NULL
+            AND manager_employee_id IS NOT NULL AND manager_first_name IS NOT NULL AND manager_last_name IS NOT NULL
         )
     )
 );
@@ -45,17 +50,14 @@ CREATE TABLE pharos_uam.employee (
 CREATE TABLE pharos_uam.okta_account (
 account_id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     employee_id         TEXT NOT NULL REFERENCES pharos_uam.employee(employee_id) ON DELETE RESTRICT,
-    application         TEXT NOT NULL CHECK (btrim(application) <> ''),
     okta_account_id TEXT NOT NULL CHECK (btrim(okta_account_id) <> ''),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT uq_account_okta UNIQUE(application,okta_account_id),
-    CONSTRAINT uq_account_scope UNIQUE(account_id,application)
+    CONSTRAINT uq_account_okta UNIQUE(okta_account_id)
 );
 
 CREATE TABLE pharos_uam.ipass_role (
 role_id             UUID DEFAULT gen_random_uuid() CONSTRAINT pk_role PRIMARY KEY,
-    application         TEXT NOT NULL CHECK (btrim(application) <> ''),
     entitlement_value   TEXT NOT NULL CHECK (btrim(entitlement_value) <> ''),
     entitlement_type    TEXT NOT NULL CHECK (btrim(entitlement_type) <> ''),
     role_name           TEXT NOT NULL CHECK (btrim(role_name) <> ''),
@@ -66,8 +68,7 @@ role_id             UUID DEFAULT gen_random_uuid() CONSTRAINT pk_role PRIMARY KE
     is_privileged       BOOLEAN NOT NULL,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT uq_role_entitlement UNIQUE(application,entitlement_value),
-    CONSTRAINT uq_role_scope UNIQUE(role_id,application)
+    CONSTRAINT uq_role_entitlement UNIQUE(entitlement_value)
 );
 
 CREATE TABLE pharos_uam.ipass_event (
@@ -76,7 +77,6 @@ CREATE TABLE pharos_uam.ipass_event (
     event_type          TEXT NOT NULL CHECK (event_type IN (
                             'USER_PROVISIONED', 'USER_UPDATED', 'USER_TERMINATED')),
     employee_id         TEXT NOT NULL CHECK (btrim(employee_id) <> ''),
-    application         TEXT,
     okta_account_id TEXT,
     event_effective_at         TIMESTAMPTZ NOT NULL,
     received_at         TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
@@ -100,16 +100,15 @@ CREATE TABLE pharos_uam.okta_account_role_assignment (
 assignment_id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     account_id          UUID NOT NULL,
     role_id             UUID NOT NULL,
-    application         TEXT NOT NULL,
     assigned_at         TIMESTAMPTZ NOT NULL,
     removed_at          TIMESTAMPTZ,
     assignment_event_id    UUID NOT NULL REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
     removal_event_id    UUID REFERENCES pharos_uam.ipass_event(event_id) ON DELETE RESTRICT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    CONSTRAINT fk_account_role_account FOREIGN KEY(account_id,application)
-        REFERENCES pharos_uam.okta_account(account_id,application) ON DELETE RESTRICT,
-    CONSTRAINT fk_account_role_role FOREIGN KEY(role_id,application)
-        REFERENCES pharos_uam.ipass_role(role_id,application) ON DELETE RESTRICT,
+    CONSTRAINT fk_account_role_account FOREIGN KEY(account_id)
+        REFERENCES pharos_uam.okta_account(account_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_account_role_role FOREIGN KEY(role_id)
+        REFERENCES pharos_uam.ipass_role(role_id) ON DELETE RESTRICT,
     CONSTRAINT ck_account_role_removal CHECK (
         (removed_at IS NULL AND removal_event_id IS NULL) OR
         (removed_at IS NOT NULL AND removal_event_id IS NOT NULL AND removed_at >= assigned_at)

@@ -22,7 +22,7 @@ spring:
       fail-on-unknown-properties: true
 server:
   address: ${SERVER_ADDRESS:127.0.0.1}
-  port: ${SERVER_PORT:8086}
+  port: ${SERVER_PORT:8082}
   shutdown: graceful
 management:
   endpoints:

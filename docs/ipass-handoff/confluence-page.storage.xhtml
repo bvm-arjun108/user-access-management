@@ -6,10 +6,11 @@
 <table><tbody><tr><th>Event</th><th>Send when</th><th>Payload / result</th></tr><tr><td><code>USER_PROVISIONED</code></td><td>First approved Pharos access, approved rehire or termination correction.</td><td>Full ACTIVE profile, one account and at least one current approved role.</td></tr><tr><td><code>USER_UPDATED</code></td><td>Roles or employee details change; another account is added for an active employee.</td><td>Full ACTIVE profile, one account and its complete current role list. An empty list removes all roles from that account.</td></tr><tr><td><code>USER_TERMINATED</code></td><td>Employment termination becomes effective.</td><td>Employee ID and TERMINATED status; termination date when known. Closes every current role assignment for that employee across all stored accounts.</td></tr></tbody></table>
 <p>Do not send hires without Pharos access, pending requests or unrelated application roles. Send termination immediately, including for previously provisioned employees with no remaining roles; do not wait for the 15-day iPass cleanup. USER_UPDATED cannot restore terminated employment.</p>
 <h2>Payload rules</h2>
-<table><tbody><tr><th>Rule</th><th>Requirement</th></tr><tr><td>Account scope</td><td>One employee and one account per provisioning/update call. Send separate calls for distinct Okta accounts.</td></tr><tr><td>Complete role list</td><td><code>user.iPassRoles</code> contains all current Pharos roles for that account. Omitted roles are removed. Missing/null is rejected. Maximum 500 roles.</td></tr><tr><td>Identity</td><td>Employee: <code>employeeId</code> (source Owner ID). Account: <code>application</code> + <code>oktaAccountId</code>. Role: <code>application</code> + <code>entitlementValue</code>. Keep identifiers stable and preserve their case.</td></tr><tr><td>Environment / owners</td><td>No environment field or inference. Source Owner First/Last describe the employee; role owners are not supplied.</td></tr><tr><td>Employee fields</td><td>Use every field in the full example. Only <code>email</code> may be omitted; it may also be null. <code>middleName</code> may be null. ACTIVE requires <code>terminationDate: null</code>. Manager ID and full name are required.</td></tr><tr><td>Role fields</td><td>Every shown role field is required. <code>assignmentStatus</code> is always PROVISIONED; <code>isPharosGroup</code> must be true. Send JSON booleans, not strings. Requestability/privilege flags are metadata.</td></tr><tr><td>Dates</td><td>Dates: YYYY-MM-DD. Timestamps: RFC 3339 with timezone. <code>eventEffectiveAt</code> is when the change took effect; <code>employeeLastSyncedAt</code> is when iPass refreshed employee details from Workday/VNDLY.</td></tr><tr><td>Assignment time</td><td><code>assignedAt</code> is the original start of the current assignment. Preserve it while membership continues; it cannot follow <code>eventEffectiveAt</code>.</td></tr><tr><td>Validation</td><td>Send nonblank strings without surrounding whitespace. Do not send future-effective changes. Full field types and limits are in Swagger.</td></tr></tbody></table>
-<h2>Request examples</h2>
+<table><tbody><tr><th>Rule</th><th>Requirement</th></tr><tr><td>Account scope</td><td>One employee and one oktaAccountId per provisioning/update call. Send separate calls for distinct Okta accounts.</td></tr><tr><td>Complete role list</td><td><code>user.iPassRoles</code> contains all current Pharos roles for that account. Omitted roles are removed. Missing/null is rejected. Maximum 500 roles.</td></tr><tr><td>Identity</td><td>Employee: <code>employeeId</code> (source Owner ID). Account: <code>application</code> + <code>oktaAccountId</code>. Role: <code>application</code> + <code>entitlementValue</code>. Keep identifiers stable and preserve their case.</td></tr><tr><td>Environment / owners</td><td>No environment field or inference. Source Owner First/Last describe the employee; role owners are not supplied.</td></tr><tr><td>Employee fields</td><td>Use every field in the full example. <code>email</code> and <code>supplier</code> may be omitted or null; either clears its saved value in a full update. <code>middleName</code> may be null. ACTIVE requires <code>terminationDate: null</code>. Manager ID, first name and last name are required; manager middleName is required but may be null.</td></tr><tr><td>Role fields</td><td>Every shown role field is required. <code>assignmentStatus</code> is always PROVISIONED; <code>isPharosGroup</code> must be true. Send JSON booleans, not strings. Requestability/privilege flags are metadata.</td></tr><tr><td>Dates</td><td>Dates: YYYY-MM-DD. Timestamps: RFC 3339 with timezone. <code>eventEffectiveAt</code> is when the change took effect; <code>employeeLastSyncedAt</code> is when iPass refreshed employee details from Workday/VNDLY.</td></tr><tr><td>Assignment time</td><td><code>assignedAt</code> is the original start of the current assignment. Preserve it while membership continues; it cannot follow <code>eventEffectiveAt</code>.</td></tr><tr><td>Validation</td><td>Send nonblank strings without surrounding whitespace. Do not send future-effective changes. Full field types and limits are in Swagger.</td></tr></tbody></table>
+<p>The jobDetails object contains department, jobCode, jobTitle, jobFamilyGroup and jobFamily. Include all five keys; use null for unavailable values. A null value clears the previously stored value.</p><p>supplier is the contractor supplier name from iPass. It is optional and may be null; missing/null clears the stored supplier in a full profile update.</p><h2>Request examples</h2>
+<p>The Swagger example selector contains these six cases. Each is a complete request.</p><table><tbody><tr><th>Use case</th><th>Event type</th><th>Expected result</th></tr><tr><td>First Pharos access</td><td><code>USER_PROVISIONED</code></td><td>Create the employee and account with the complete approved role list.</td></tr><tr><td>Remove one role</td><td><code>USER_UPDATED</code></td><td>Omit GSI; retain every other current role for this account.</td></tr><tr><td>Add a role</td><td><code>USER_UPDATED</code></td><td>Include GDD together with every existing current role for this account.</td></tr><tr><td>Remove all roles</td><td><code>USER_UPDATED</code></td><td>Send iPassRoles: []; employment remains ACTIVE and the account has no current roles.</td></tr><tr><td>Terminate employee</td><td><code>USER_TERMINATED</code></td><td>Close current assignments across all employee accounts immediately.</td></tr><tr><td>Restore access after termination correction</td><td><code>USER_PROVISIONED</code></td><td>Send the approved ACTIVE profile and current roles for the account being restored.</td></tr></tbody></table>
 <p>Fictional data. USER_UPDATED uses the full provisioning structure with a new event ID, the effective time of the change and the complete current account snapshot. To remove every role, send that full structure with <code>iPassRoles: []</code>.</p>
-<ac:structured-macro ac:name="expand" ac:schema-version="1"><ac:parameter ac:name="title">Full provisioning payload — two Pharos roles</ac:parameter><ac:rich-text-body><ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">json</ac:parameter><ac:plain-text-body><![CDATA[{
+<ac:structured-macro ac:name="expand" ac:schema-version="1"><ac:parameter ac:name="title">Full provisioning payload — KYC, GSI and BKYC roles</ac:parameter><ac:rich-text-body><ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">json</ac:parameter><ac:plain-text-body><![CDATA[{
   "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
   "eventType": "USER_PROVISIONED",
   "eventEffectiveAt": "2026-07-11T14:00:00Z",
@@ -23,17 +24,16 @@
     "employmentStatus": "ACTIVE",
     "hireDate": "2026-07-01",
     "terminationDate": null,
-    "employmentType": "FTE",
-    "superiorOrganization": "Western Union",
-    "organizationId": "ORG-FCC-101",
+    "companyName": "Western Union",
     "country": "USA",
-    "region": "North America",
-    "site": "Denver",
-    "supervisoryOrganization": "Financial Crime Compliance",
+    "businessUnit": "North America",
+    "city": "Denver",
     "employeeLastSyncedAt": "2026-07-11T14:00:00Z",
     "manager": {
       "employeeId": "WU100210",
-      "name": "Maya R Patel"
+      "firstName": "Maya",
+      "middleName": "R",
+      "lastName": "Patel"
     },
     "iPassRoles": [
       {
@@ -59,13 +59,30 @@
         "isPharosGroup": true,
         "isAvailableForRequest": true,
         "isPrivileged": false
+      },
+      {
+        "roleName": "APP_Pharos_Prod_BKYC_Analyst",
+        "roleDescription": "BKYC Analyst",
+        "assignedAt": "2026-07-11T14:00:00Z",
+        "assignmentStatus": "PROVISIONED",
+        "entitlementValue": "00g7m3r5t8W4zAbCd0h7",
+        "entitlementType": "groups",
+        "displayName": "BKYC Analyst",
+        "isPharosGroup": true,
+        "isAvailableForRequest": true,
+        "isPrivileged": false
       }
     ],
     "employeeClass": "Employee",
-    "account": {
-      "application": "Okta",
-      "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
-    }
+    "jobDetails": {
+      "department": "Financial Crime Compliance",
+      "jobCode": "2726T",
+      "jobTitle": "Senior Analyst AML Compliance",
+      "jobFamilyGroup": "Compliance",
+      "jobFamily": "AML/CPCE Compliance Global Operations"
+    },
+    "supplier": null,
+    "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
   }
 }]]></ac:plain-text-body></ac:structured-macro></ac:rich-text-body></ac:structured-macro>
 <ac:structured-macro ac:name="expand" ac:schema-version="1"><ac:parameter ac:name="title">Update payload — remove GSI and retain the other current roles</ac:parameter><ac:rich-text-body><p>GSI is omitted from the complete account role list. Pharos removes that assignment and retains the listed roles.</p><ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">json</ac:parameter><ac:plain-text-body><![CDATA[{
@@ -82,17 +99,16 @@
     "employmentStatus": "ACTIVE",
     "hireDate": "2026-07-01",
     "terminationDate": null,
-    "employmentType": "FTE",
-    "superiorOrganization": "Western Union",
-    "organizationId": "ORG-FCC-101",
+    "companyName": "Western Union",
     "country": "USA",
-    "region": "North America",
-    "site": "Denver",
-    "supervisoryOrganization": "Financial Crime Compliance",
+    "businessUnit": "North America",
+    "city": "Denver",
     "employeeLastSyncedAt": "2026-07-17T10:00:00Z",
     "manager": {
       "employeeId": "WU100210",
-      "name": "Maya R Patel"
+      "firstName": "Maya",
+      "middleName": "R",
+      "lastName": "Patel"
     },
     "iPassRoles": [
       {
@@ -121,10 +137,15 @@
       }
     ],
     "employeeClass": "Employee",
-    "account": {
-      "application": "Okta",
-      "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
-    }
+    "jobDetails": {
+      "department": "Financial Crime Compliance",
+      "jobCode": "2726T",
+      "jobTitle": "Senior Analyst AML Compliance",
+      "jobFamilyGroup": "Compliance",
+      "jobFamily": "AML/CPCE Compliance Global Operations"
+    },
+    "supplier": null,
+    "oktaAccountId": "00u8k3m5n7P2qRsTu0h7"
   }
 }]]></ac:plain-text-body></ac:structured-macro></ac:rich-text-body></ac:structured-macro>
 <ac:structured-macro ac:name="expand" ac:schema-version="1"><ac:parameter ac:name="title">Minimal termination payload</ac:parameter><ac:rich-text-body><ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="language">json</ac:parameter><ac:plain-text-body><![CDATA[{
@@ -143,7 +164,7 @@
   "eventId": "9cd02b67-53f5-47c5-ac38-426527f41c72",
   "status": "SUCCESS"
 }]]></ac:plain-text-body></ac:structured-macro>
-<table><tbody><tr><th>Outcome</th><th>iPass action</th></tr><tr><td>200</td><td>Mark delivered.</td></tr><tr><td>400 / 422</td><td>Correct the invalid payload or business rule. Submit corrected content with a new event UUID.</td></tr><tr><td>409</td><td>Resolve the identity conflict, changed content under an existing UUID, or disallowed reactivation. Do not retry unchanged.</td></tr><tr><td>Timeout / connection failure / 500 / 503</td><td>Retry the same event UUID and unchanged payload with backoff. If retries fail, retain the event for investigation and replay.</td></tr></tbody></table>
+<table><tbody><tr><th>Outcome</th><th>iPass action</th></tr><tr><td>200</td><td>Mark delivered.</td></tr><tr><td>400</td><td>Resolve the invalid payload, identity conflict or business rule. Submit corrected content with a new event UUID.</td></tr><tr><td>Timeout / connection failure / 500</td><td>Retry the same event UUID and unchanged payload with backoff. If retries fail, retain the event for investigation and replay.</td></tr></tbody></table>
 <p>Generate a new UUID for each new event. Reuse that UUID only for delivery of the identical event. Preserve event order per employee across all accounts, including retries. Pharos does not reject stale events automatically; do not replay an older snapshot after a newer one. Agree retry limits and urgent termination-failure escalation before go-live.</p>
 <p>Error JSON contains <code>timestamp</code>, <code>status</code>, <code>code</code>, <code>message</code> and <code>correlationId</code>. Use the message to resolve the failure; provide eventId and correlationId to Pharos support.</p>
 <h2>Interactive API reference</h2>
