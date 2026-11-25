@@ -158,8 +158,6 @@ These endpoints return 404 when the record is not found. A missing event record 
 
 ## Interactive API reference
 
-Swagger contains field definitions and examples for provisioning, updates, removals, contractors and restoration. “Try it out” sends real requests to the selected server.
+Browse endpoints, schemas and payload examples in the OpenAPI macro on this Confluence page. The macro reads the attached `pharos-ipass.openapi.json`; readers do not need a running Pharos application.
 
-[Open Swagger]({{PHAROS_BASE_URL}}/swagger-ui.html) · [OpenAPI JSON]({{PHAROS_BASE_URL}}/openapi/ipass.json)
-
-The Confluence storage file includes an iFrame macro for Swagger and a direct-link fallback.
+API execution is disabled for contract review. “Try it out” requires a reachable API endpoint and agreed authentication.

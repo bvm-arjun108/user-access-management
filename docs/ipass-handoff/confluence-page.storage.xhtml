@@ -91,6 +91,7 @@
 <table><tbody><tr><th>GET endpoint</th><th>Use</th></tr><tr><td><code>/api/v1/employees/{employeeId}</code></td><td>Current employee profile and account assignments.</td></tr><tr><td><code>/api/v1/employees/{employeeId}?includeHistory=true</code></td><td>Also include removed assignments.</td></tr><tr><td><code>/api/v1/ipass/events/{eventId}</code></td><td>Check the latest recorded processing outcome. APPLIED confirms processing; FAILED requires investigation.</td></tr></tbody></table>
 <p>These endpoints return 404 when the record is not found. A missing event record does not prove a timed-out request was never received; retry the unchanged event safely.</p>
 <h2>Interactive API reference</h2>
-<p>Swagger contains field definitions and examples for provisioning, updates, removals, contractors and restoration. “Try it out” sends real requests to the selected server.</p>
-<p><a href="{{PHAROS_BASE_URL}}/swagger-ui.html">Open Swagger</a> · <a href="{{PHAROS_BASE_URL}}/openapi/ipass.json">OpenAPI JSON</a></p>
-<ac:structured-macro ac:name="iframe" ac:schema-version="1"><ac:parameter ac:name="url">{{PHAROS_BASE_URL}}/swagger-ui.html</ac:parameter><ac:parameter ac:name="width">100%</ac:parameter><ac:parameter ac:name="height">900</ac:parameter><ac:parameter ac:name="scrolling">auto</ac:parameter></ac:structured-macro>
+<p>Browse endpoints, schemas and payload examples in the OpenAPI macro on this page. It reads the attached <code>pharos-ipass.openapi.json</code>; readers do not need a running Pharos application.</p>
+<p>API execution is disabled for contract review. “Try it out” requires a reachable API endpoint and agreed authentication.</p>
+<!-- Publisher: replace the following paragraph with the installed OpenAPI app macro using the page attachment. Macro storage syntax is app-specific. -->
+<p><strong>Publisher setup:</strong> Insert your installed OpenAPI/Swagger macro here, select the page attachment <code>pharos-ipass.openapi.json</code>, and disable request execution before sharing.</p>

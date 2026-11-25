@@ -1,27 +1,29 @@
-# Publish the iPass handoff page
+# Publish in Confluence Cloud
 
-- `README.md`: readable handoff page.
-- `confluence-page.storage.xhtml`: the same page in Atlassian storage format, with native Expand and Code macros and a Swagger iFrame template.
+The interactive API reference is rendered inside Confluence from a page attachment. No hosted Swagger page or running Pharos application is needed for browsing.
 
-## Before publishing
+## Files
 
-1. Replace `{{PHAROS_BASE_URL}}` in both files with the agreed shared HTTPS base URL, without a trailing slash. Local preview: `http://localhost:8086/swagger-ui.html`.
-2. Confirm authentication, retry limits and the termination-failure escalation contact with iPass. These are not configured by this document.
-3. Check Swagger's server selection. The current OpenAPI file targets `http://localhost:8086`; configure the shared API server URL in the published contract before allowing shared “Try it out” usage.
+- `README.md`: concise handoff content.
+- `confluence-page.storage.xhtml`: Atlassian storage body with Expand and Code macros; an insertion point for the installed OpenAPI macro.
+- `pharos-ipass.openapi.json`: self-contained contract to attach to the page. Schemas and examples match the application contract; its server is a deliberately non-resolving `.invalid` address for documentation review.
 
-## Confluence Cloud
+## Publish
 
-Use the XHTML as a page body with representation `storage` through your approved Confluence publishing tool or a storage-source editor. Do not paste raw XHTML into the normal rich-text editor. Alternatively, copy the readable page and add Expand, Code and iFrame macros through the editor.
+1. Create the page from the README, or use the XHTML with an approved publisher supporting Confluence `storage` format. Raw XHTML cannot be pasted into the normal editor.
+2. Attach `pharos-ipass.openapi.json` to the page.
+3. Insert your installed OpenAPI/Swagger app macro under **Interactive API reference** and select this page attachment as its source. Use its attachment or pasted-spec mode, not a URL to the running application.
+4. Disable request execution (“Try it out”) in the macro settings. Verify that readers can expand endpoints, inspect schemas and select examples. Remove the publisher setup paragraph.
+5. Keep the endpoint placeholder until the shared API address is agreed. Authentication, retry limits and termination-failure escalation also remain integration agreements.
 
-This page targets Confluence Cloud. In the page editor, insert the iFrame macro and set its URL to the shared Swagger URL, height to 900 pixels and scrolling to auto. The storage file includes this macro as a template. Retain the direct Swagger link if embedding is unavailable.
+## Required Confluence capability
 
-The Swagger host must be reachable by readers and permit framing by your Confluence site. A Markdown file alone cannot run interactive Swagger. Confluence Cloud is confirmed. The embed has not been tested in your instance; the shared Swagger URL is still required.
+Interactive OpenAPI rendering requires an installed compatible app; a standard Code macro only displays JSON. For example, [OpenAPI Viewer for Confluence](https://marketplace.atlassian.com/apps/2956960728/openapi-viewer-for-confluence) lists support for page attachments and pasted specifications. Use an organization-approved app already available on your site where possible.
 
-Authoritative references: [Atlassian iFrame macro](https://support.atlassian.com/confluence-cloud/docs/insert-the-iframe-macro/) and [iframe deployment requirements](https://support.atlassian.com/confluence/kb/how-to-put-an-iframe-into-confluence/).
+Macro names, storage syntax and request-execution settings depend on the installed app. The page deliberately leaves the macro insertion point unconfigured until that app is known. If no compatible app is installed, a Confluence administrator must enable one to meet the interactive requirement.
 
-## Contract and test collection
+The contract can be reviewed without API access. Actual API calls require a shared endpoint and authentication. The macro has not yet been configured or tested in your Confluence instance.
 
-- [OpenAPI contract](../../src/main/resources/static/openapi/ipass.json)
-- [Postman collection](../../postman/Pharos-UAM.postman_collection.json)
+## Updating the contract
 
-Keep these linked to the reviewed repository version; avoid maintaining a second schema inside the page.
+Regenerate the attachment from `../../src/main/resources/static/openapi/ipass.json` when the contract changes, retaining the documentation-only server until API execution is enabled deliberately. Replace the same Confluence attachment to update the documentation.
