@@ -16,6 +16,7 @@ import java.util.UUID;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.dao.DuplicateKeyException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -77,9 +78,10 @@ public class UamRepository {
   public void saveProfile(EmployeeEvent e) {
     JsonNode u = e.user();
     Map<String, Object> p = new LinkedHashMap<>();
-    String[][] fields = {{"employeeId", "employee_id"}, {"sourceSystem", "source_system"}, {"firstName", "first_name"},
-        {"middleName", "middle_name"}, {"lastName", "last_name"}, {"email", "email"}, {"employmentStatus", "employment_status"},
-        {"employeeClass", "employee_class"}, {"supplier", "supplier"}, {"companyName", "company_name"}, {"country", "country"},
+    String[][] fields = {{"employeeId", "employee_id"}, {"oktaAccountId", "okta_account_id"}, {"sourceSystem", "source_system"},
+        {"firstName", "first_name"}, {"middleName", "middle_name"}, {"lastName", "last_name"}, {"email", "email"},
+        {"employmentStatus", "employment_status"}, {"employeeClass", "employee_class"}, {"supplier", "supplier"},
+        {"companyName", "company_name"}, {"country", "country"},
         {"businessUnit", "business_unit"}, {"city", "city"}};
     for (String[] field : fields) {
       p.put(field[1], !u.hasNonNull(field[0]) ? null : u.get(field[0]).asString());
@@ -99,7 +101,13 @@ public class UamRepository {
     for (String[] field : jobFields) {
       p.put(field[1], job.get(field[0]).isNull() ? null : job.get(field[0]).asString());
     }
-    jdbc.update(sql.load("employee/upsert"), p);
+    try {
+      if (jdbc.update(sql.load("employee/upsert"), p) == 0) {
+        throw ApiException.conflict("ACCOUNT_IDENTITY_CONFLICT", "Employee is already linked to a different Okta account");
+      }
+    } catch (DuplicateKeyException conflict) {
+      throw ApiException.conflict("ACCOUNT_IDENTITY_CONFLICT", "Okta account is already linked to another employee");
+    }
   }
 
   public void terminate(EmployeeEvent e) {
@@ -107,15 +115,6 @@ public class UamRepository {
     jdbc.update(sql.load("employee/terminate"),
         new MapSqlParameterSource("employee", e.employeeId())
           .addValue("date", d == null || d.isNull() ? null : EventValidator.date(e.user(), "terminationDate")));
-  }
-
-  public String saveAccount(EmployeeEvent e) {
-    List<String> result = jdbc.query(sql.load("account/upsert"), Map.of("employee", e.employeeId(), "external",
-        e.user().get("oktaAccountId").asString()), (rs, i) -> rs.getString(1));
-    if (result.isEmpty()) {
-      throw ApiException.conflict("ACCOUNT_IDENTITY_CONFLICT", "Account is already linked to a different employee");
-    }
-    return result.getFirst();
   }
 
   public record RoleRow(UUID id) {}
@@ -137,9 +136,9 @@ public class UamRepository {
     return result.getFirst();
   }
 
-  public void retainOrCreateAssignment(EmployeeEvent e, String account, UUID role, JsonNode source) {
+  public void retainOrCreateAssignment(EmployeeEvent e, UUID role, JsonNode source) {
     Instant assigned = EventValidator.timestamp(source, "assignedAt").truncatedTo(ChronoUnit.MICROS);
-    List<Instant> existing = jdbc.query(sql.load("assignment/current"), Map.of("account", account, "role", role), (rs, i) -> rs
+    List<Instant> existing = jdbc.query(sql.load("assignment/current"), Map.of("employee", e.employeeId(), "role", role), (rs, i) -> rs
       .getObject(1, OffsetDateTime.class)
       .toInstant());
     if (!existing.isEmpty()) {
@@ -149,15 +148,15 @@ public class UamRepository {
       return;
     }
     jdbc.update(sql.load("assignment/create"),
-        new MapSqlParameterSource("account", account)
+        new MapSqlParameterSource("employee", e.employeeId())
           .addValue("role", role)
           .addValue("assigned", OffsetDateTime.ofInstant(assigned, java.time.ZoneOffset.UTC))
           .addValue("event", e.eventId()));
   }
 
-  public void reconcile(EmployeeEvent e, String account) {
+  public void reconcile(EmployeeEvent e) {
     jdbc.update(sql.load("assignment/reconcile"),
-        Map.of("account", account, "event", e.eventId(), "roles", e.user().get("iPassRoles").toString()));
+        Map.of("employee", e.employeeId(), "event", e.eventId(), "roles", e.user().get("iPassRoles").toString()));
   }
 
   public void terminateAssignments(EmployeeEvent e) {

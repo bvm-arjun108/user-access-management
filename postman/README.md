@@ -7,3 +7,5 @@ Run the collection in order against http://localhost:8086. The first request cre
 CLI: `newman run postman/Pharos-UAM.postman_collection.json -e postman/Local.postman_environment.json`.
 
 Collection-level checks verify X-Correlation-ID on every response and matching correlationId in error bodies.
+
+The internal employee GET returns `employee` and `assignments`. The collection also checks one unique Okta ID per employee, rejects identity changes, and verifies role changes do not affect another employee.

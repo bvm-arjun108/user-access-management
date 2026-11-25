@@ -83,7 +83,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.assignments.length).to.eql(3));"
                 ]
               }
             }
@@ -205,7 +205,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(2));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.assignments.length).to.eql(2));"
                 ]
               }
             }
@@ -259,7 +259,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.assignments.length).to.eql(3));"
                 ]
               }
             }
@@ -347,7 +347,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(0));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.assignments.length).to.eql(0));"
                 ]
               }
             }
@@ -367,7 +367,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const assignments = pm.response.json().accounts.flatMap(a => a.assignments);",
+                  "const assignments = pm.response.json().assignments;",
                   "pm.test(\"Removed assignments are retained\", () => {",
                   "  pm.expect(assignments.length).to.be.above(0);",
                   "  pm.expect(assignments.every(a => a.assignmentStatus === \"REMOVED\" && a.removedAt !== null)).to.eql(true);",
@@ -425,7 +425,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"TERMINATED\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(0));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"TERMINATED\"));\npm.test(\"Current assignments\",()=>pm.expect(body.assignments.length).to.eql(0));"
                 ]
               }
             }
@@ -513,7 +513,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
+                  "const body=pm.response.json();\npm.test(\"Employment status\",()=>pm.expect(body.employee.employment_status).to.eql(\"ACTIVE\"));\npm.test(\"Current assignments\",()=>pm.expect(body.assignments.length).to.eql(3));"
                 ]
               }
             }
@@ -699,7 +699,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
-                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
+                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.assignments.length).to.eql(3));"
                 ]
               }
             }
@@ -753,7 +753,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json(); pm.test(\"Employment TERMINATED\",()=>pm.expect(b.employee.employment_status).to.eql(\"TERMINATED\"));",
-                  "pm.test(\"Current assignments 0\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(0));"
+                  "pm.test(\"Current assignments 0\",()=>pm.expect(b.assignments.length).to.eql(0));"
                 ]
               }
             }
@@ -807,7 +807,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
-                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(3));"
+                  "pm.test(\"Current assignments 3\",()=>pm.expect(b.assignments.length).to.eql(3));"
                 ]
               }
             }
@@ -894,7 +894,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json(); pm.test(\"Employment ACTIVE\",()=>pm.expect(b.employee.employment_status).to.eql(\"ACTIVE\"));",
-                  "pm.test(\"Current assignments 1\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(1));"
+                  "pm.test(\"Current assignments 1\",()=>pm.expect(b.assignments.length).to.eql(1));"
                 ]
               }
             }
@@ -903,10 +903,10 @@
       ]
     },
     {
-      "name": "04 Account isolation and shared role metadata",
+      "name": "04 Employee isolation and shared role metadata",
       "item": [
         {
-          "name": "01 Provision first account",
+          "name": "01 Provision first employee",
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/v1/ipass/events",
@@ -932,7 +932,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.collectionVariables.set(\"employeeId\",\"PM-ACCT-\"+pm.variables.replaceIn(\"{{$guid}}\"));"
+                  "pm.collectionVariables.set(\"employeeId\",\"PM-ACCT-\"+pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "pm.collectionVariables.set(\"secondEmployeeId\",pm.collectionVariables.get(\"employeeId\")+\"-SECOND\");"
                 ]
               }
             },
@@ -948,7 +949,7 @@
           ]
         },
         {
-          "name": "02 Provision second account for same employee",
+          "name": "02 Provision second employee with shared roles",
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/v1/ipass/events",
@@ -960,7 +961,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_UPDATED\",\n  \"eventEffectiveAt\": \"2026-07-11T14:00:00Z\",\n  \"user\": {\n    \"employeeId\": \"{{employeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"companyName\": \"Western Union\",\n    \"country\": \"USA\",\n    \"businessUnit\": \"North America\",\n    \"city\": \"Denver\",\n    \"employeeLastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00g8n4q2r6T9vWxYz0h7\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00g9p5s3u7V2xYaBc0h7\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00g7m3r5t8W4zAbCd0h7\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"jobDetails\": {\n      \"department\": \"Financial Crime Compliance\",\n      \"jobCode\": \"2726T\",\n      \"jobTitle\": \"Senior Analyst AML Compliance\",\n      \"jobFamilyGroup\": \"Compliance\",\n      \"jobFamily\": \"AML/CPCE Compliance Global Operations\"\n    },\n    \"supplier\": null,\n    \"oktaAccountId\": \"00u-secondary-{{employeeId}}\"\n  }\n}",
+              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"eventEffectiveAt\": \"2026-07-11T14:00:00Z\",\n  \"user\": {\n    \"employeeId\": \"{{secondEmployeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"companyName\": \"Western Union\",\n    \"country\": \"USA\",\n    \"businessUnit\": \"North America\",\n    \"city\": \"Denver\",\n    \"employeeLastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"APP_Pharos_Prod_KYC_Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00g8n4q2r6T9vWxYz0h7\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_GSI_Analyst\",\n        \"roleDescription\": \"GSI Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00g9p5s3u7V2xYaBc0h7\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"GSI Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false\n      },\n      {\n        \"roleName\": \"APP_Pharos_Prod_BKYC_Analyst\",\n        \"roleDescription\": \"BKYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00g7m3r5t8W4zAbCd0h7\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"BKYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"jobDetails\": {\n      \"department\": \"Financial Crime Compliance\",\n      \"jobCode\": \"2726T\",\n      \"jobTitle\": \"Senior Analyst AML Compliance\",\n      \"jobFamilyGroup\": \"Compliance\",\n      \"jobFamily\": \"AML/CPCE Compliance Global Operations\"\n    },\n    \"supplier\": null,\n    \"oktaAccountId\": \"00u-secondary-{{employeeId}}\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -981,10 +982,10 @@
           ]
         },
         {
-          "name": "03 Verify two accounts keep separate assignments",
+          "name": "03 Verify second employee assignments",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "url": "{{baseUrl}}/api/v1/employees/{{secondEmployeeId}}",
             "header": []
           },
           "event": [
@@ -995,8 +996,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json();",
-                  "pm.test(\"Two accounts\",()=>pm.expect(b.accounts.length).to.eql(2));",
-                  "pm.test(\"Six current assignments\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(6));"
+                  "pm.test(\"Second employee has three roles\",()=>{pm.expect(b.employee.employee_id).to.eql(pm.collectionVariables.get(\"secondEmployeeId\"));pm.expect(b.assignments.length).to.eql(3);});"
                 ]
               }
             }
@@ -1036,10 +1036,10 @@
           ]
         },
         {
-          "name": "05 Verify flags are shared across account assignments",
+          "name": "05 Verify shared role flags for second employee",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "url": "{{baseUrl}}/api/v1/employees/{{secondEmployeeId}}",
             "header": []
           },
           "event": [
@@ -1048,16 +1048,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
-                  "const roles=pm.response.json().accounts.flatMap(a=>a.assignments).filter(r=>r.roleName===\"APP_Pharos_Prod_KYC_Analyst\");",
-                  "pm.test(\"Both accounts see shared role flags\",()=>pm.expect(roles.length===2 && roles.every(r=>r.isPrivileged===true)).to.eql(true));"
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const roles=pm.response.json().assignments.filter(r=>r.roleName===\"APP_Pharos_Prod_KYC_Analyst\");",
+                  "pm.test(\"Shared KYC flag updated\",()=>pm.expect(roles.length===1 && roles[0].isPrivileged===true).to.eql(true));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "06 Remove first account roles only",
+          "name": "06 Remove first employee roles",
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/v1/ipass/events",
@@ -1090,10 +1090,10 @@
           ]
         },
         {
-          "name": "07 Verify second account retains access assignments",
+          "name": "07 Verify second employee keeps its roles",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/employees/{{employeeId}}",
+            "url": "{{baseUrl}}/api/v1/employees/{{secondEmployeeId}}",
             "header": []
           },
           "event": [
@@ -1104,8 +1104,7 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json();",
-                  "pm.test(\"Three current assignments remain\",()=>pm.expect(b.accounts.flatMap(a=>a.assignments).length).to.eql(3));",
-                  "pm.test(\"Second account retains all roles\",()=>pm.expect(b.accounts.find(a=>a.oktaAccountId.startsWith(\"00u-secondary-\")).assignments.length).to.eql(3));"
+                  "pm.test(\"Other employee still has three roles\",()=>{pm.expect(b.employee.employee_id).to.eql(pm.collectionVariables.get(\"secondEmployeeId\"));pm.expect(b.assignments.length).to.eql(3);});"
                 ]
               }
             }
@@ -1114,10 +1113,10 @@
       ]
     },
     {
-      "name": "05 Two source accounts - environment unknown",
+      "name": "05 One Okta ID per employee",
       "item": [
         {
-          "name": "01 Provision first source account",
+          "name": "01 Provision employee and its Okta ID",
           "request": {
             "method": "POST",
             "header": [
@@ -1161,7 +1160,7 @@
           ]
         },
         {
-          "name": "02 Add second source account",
+          "name": "02 Reject another Okta ID for same employee",
           "request": {
             "method": "POST",
             "header": [
@@ -1187,14 +1186,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));"
+                  "pm.test(\"HTTP 400\",()=>pm.response.to.have.status(400));",
+                  "pm.test(\"Identity conflict\",()=>pm.expect(pm.response.json().code).to.eql(\"ACCOUNT_IDENTITY_CONFLICT\"));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "03 Verify one employee with two independent accounts",
+          "name": "03 Verify original Okta ID and roles retained",
           "request": {
             "method": "GET",
             "header": [],
@@ -1208,9 +1208,41 @@
                 "exec": [
                   "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
                   "const b=pm.response.json();",
-                  "pm.test(\"Both source accounts remain separate\",()=>{pm.expect(b.accounts.length).to.eql(2);pm.expect(new Set(b.accounts.map(a=>a.oktaAccountId)).size).to.eql(2);});",
-                  "pm.test(\"Each account retains its own entitlement\",()=>{b.accounts.forEach(a=>{pm.expect(a.assignments.length).to.eql(1);const id=a.oktaAccountId.includes(\"source-second\")?\"00g-source-second\":\"00g-source-first\";pm.expect(a.assignments[0].entitlementValue).to.eql(id);});});",
-                  "pm.test(\"No inferred environment\",()=>pm.expect(JSON.stringify(b)).not.to.include(\"environment\"));"
+                  "pm.test(\"Original employee identity retained\",()=>{pm.expect(b.employee.okta_account_id).to.eql(\"00u-source-first-\"+pm.collectionVariables.get(\"sourceEmployeeId\"));pm.expect(b.assignments.length).to.eql(1);pm.expect(b.assignments[0].entitlementValue).to.eql(\"00g-source-first\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Reject same Okta ID for another employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/ipass/events",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{$guid}}\",\n  \"eventType\": \"USER_PROVISIONED\",\n  \"eventEffectiveAt\": \"2026-07-11T14:00:00Z\",\n  \"user\": {\n    \"employeeId\": \"OTHER-{{sourceEmployeeId}}\",\n    \"sourceSystem\": \"WORKDAY\",\n    \"firstName\": \"Arjun\",\n    \"middleName\": null,\n    \"lastName\": \"Sharma\",\n    \"email\": \"arjun.sharma@example.com\",\n    \"employmentStatus\": \"ACTIVE\",\n    \"hireDate\": \"2026-07-01\",\n    \"terminationDate\": null,\n    \"companyName\": \"Western Union\",\n    \"country\": \"USA\",\n    \"businessUnit\": \"North America\",\n    \"city\": \"Denver\",\n    \"employeeLastSyncedAt\": \"2026-07-11T14:00:00Z\",\n    \"manager\": {\n      \"employeeId\": \"WU100210\",\n      \"firstName\": \"Maya\",\n      \"middleName\": \"R\",\n      \"lastName\": \"Patel\"\n    },\n    \"iPassRoles\": [\n      {\n        \"roleName\": \"Pharos Source Analyst\",\n        \"roleDescription\": \"KYC Analyst\",\n        \"assignedAt\": \"2026-07-11T14:00:00Z\",\n        \"assignmentStatus\": \"PROVISIONED\",\n        \"entitlementValue\": \"00g-source-first\",\n        \"entitlementType\": \"groups\",\n        \"displayName\": \"KYC Analyst\",\n        \"isPharosGroup\": true,\n        \"isAvailableForRequest\": true,\n        \"isPrivileged\": false\n      }\n    ],\n    \"employeeClass\": \"Employee\",\n    \"jobDetails\": {\n      \"department\": \"Financial Crime Compliance\",\n      \"jobCode\": \"2726T\",\n      \"jobTitle\": \"Senior Analyst AML Compliance\",\n      \"jobFamilyGroup\": \"Compliance\",\n      \"jobFamily\": \"AML/CPCE Compliance Global Operations\"\n    },\n    \"supplier\": null,\n    \"oktaAccountId\": \"00u-source-first-{{sourceEmployeeId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\",()=>pm.response.to.have.status(400));",
+                  "pm.test(\"Identity conflict\",()=>pm.expect(pm.response.json().code).to.eql(\"ACCOUNT_IDENTITY_CONFLICT\"));"
                 ]
               }
             }
@@ -1244,9 +1276,9 @@
         "exec": [
           "if (pm.request.method === \"GET\" && pm.response.code === 200) {",
           "  const body = pm.response.json();",
-          "  if (Array.isArray(body.accounts) && !pm.request.url.toString().includes(\"includeHistory=true\")) {",
+          "  if (Array.isArray(body.assignments) && !pm.request.url.toString().includes(\"includeHistory=true\")) {",
           "    pm.test(\"Only current assignments are returned\", () => {",
-          "      body.accounts.flatMap(a => a.assignments).forEach(a => {",
+          "      body.assignments.forEach(a => {",
           "        pm.expect(a.assignmentStatus).to.eql(\"PROVISIONED\");",
           "        pm.expect(a.removedAt).to.eql(null);",
           "      });",

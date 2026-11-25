@@ -40,7 +40,7 @@ class EmployeeLifecycleIT {
       throw new IllegalStateException("Integration tests require a dedicated database ending _test");
     }
     jdbc.execute(
-        "TRUNCATE pharos_uam.okta_account_role_assignment,pharos_uam.okta_account,pharos_uam.employee,pharos_uam.ipass_role,pharos_uam."
+        "TRUNCATE pharos_uam.employee_role_assignment,pharos_uam.employee,pharos_uam.ipass_role,pharos_uam."
         + "ipass_event RESTART IDENTITY CASCADE");
     initial = (ObjectNode) mapper.readTree(getClass().getResourceAsStream("/provision.json"));
     initial.put("eventId", UUID.randomUUID().toString());
@@ -73,7 +73,7 @@ class EmployeeLifecycleIT {
   }
 
   private long active() {
-    return jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment WHERE removed_at IS NULL", Long.class);
+    return jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee_role_assignment WHERE removed_at IS NULL", Long.class);
   }
 
   @Test
@@ -105,7 +105,7 @@ class EmployeeLifecycleIT {
     assertThat(post(termination()).status()).isEqualTo(200);
     assertThat(active()).isZero();
     assertThat(jdbc.queryForObject("SELECT employment_status FROM pharos_uam.employee", String.class)).isEqualTo("TERMINATED");
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment", Long.class)).isEqualTo(4);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee_role_assignment", Long.class)).isEqualTo(4);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_role", Long.class)).isEqualTo(4);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_event WHERE processing_status='APPLIED'", Long.class)).isEqualTo(
         4);
@@ -154,16 +154,16 @@ class EmployeeLifecycleIT {
     assertThat(read.statusCode()).isEqualTo(200);
     JsonNode employee = mapper.readTree(read.body());
     assertThat(employee.get("employee").get("employment_status").asString()).isEqualTo("ACTIVE");
-    assertThat(employee.get("accounts").size()).isEqualTo(1);
-    assertThat(employee.get("accounts").get(0).get("assignments").size()).isZero();
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment WHERE removed_at IS NOT NULL", Long.class))
+    assertThat(employee.get("employee").get("okta_account_id").asString()).isEqualTo(initial.get("user").get("oktaAccountId").asString());
+    assertThat(employee.get("assignments").size()).isZero();
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee_role_assignment WHERE removed_at IS NOT NULL", Long.class))
       .isEqualTo(3);
     var history = http.send(HttpRequest
           .newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482?includeHistory=true"))
           .GET()
           .build(), HttpResponse.BodyHandlers.ofString());
     assertThat(history.statusCode()).isEqualTo(200);
-    JsonNode historicalAssignments = mapper.readTree(history.body()).get("accounts").get(0).get("assignments");
+    JsonNode historicalAssignments = mapper.readTree(history.body()).get("assignments");
     assertThat(historicalAssignments.size()).isEqualTo(3);
     for (JsonNode assignment : historicalAssignments) {
       assertThat(assignment.get("assignmentStatus").asString()).isEqualTo("REMOVED");
@@ -179,18 +179,18 @@ class EmployeeLifecycleIT {
     assertThat(active()).isEqualTo(1);
     var restored = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482")).GET().build(),
         HttpResponse.BodyHandlers.ofString());
-    assertThat(mapper.readTree(restored.body()).get("accounts").get(0).get("assignments").size()).isEqualTo(1);
+    assertThat(mapper.readTree(restored.body()).get("assignments").size()).isEqualTo(1);
     var all = http.send(HttpRequest
           .newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482?includeHistory=true"))
           .GET()
           .build(), HttpResponse.BodyHandlers.ofString());
-    assertThat(mapper.readTree(all.body()).get("accounts").get(0).get("assignments").size()).isEqualTo(4);
+    assertThat(mapper.readTree(all.body()).get("assignments").size()).isEqualTo(4);
     var invalid = http.send(HttpRequest
           .newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482?includeHistory=invalid"))
           .GET()
           .build(), HttpResponse.BodyHandlers.ofString());
     assertThat(invalid.statusCode()).isEqualTo(400);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment", Long.class)).isEqualTo(4);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee_role_assignment", Long.class)).isEqualTo(4);
   }
 
   @Test
@@ -255,8 +255,8 @@ class EmployeeLifecycleIT {
   void databaseRejectsDuplicateAccountsRolesAndCurrentAssignments() throws Exception {
     assertThat(post(initial).status()).isEqualTo(200);
     assertThatThrownBy(() -> jdbc.update(
-        "INSERT INTO pharos_uam.okta_account(employee_id,okta_account_id) "
-        + "SELECT employee_id,okta_account_id FROM pharos_uam.okta_account LIMIT 1"))
+        "INSERT INTO pharos_uam.employee(employee_id,okta_account_id,employment_status) "
+        + "SELECT 'OTHER',okta_account_id,'TERMINATED' FROM pharos_uam.employee LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThatThrownBy(() -> jdbc.update(
         "INSERT INTO pharos_uam.ipass_role(entitlement_value,entitlement_type,role_name,display_name,"
@@ -265,36 +265,32 @@ class EmployeeLifecycleIT {
         + "role_description,is_pharos_group,is_available_for_request,is_privileged FROM pharos_uam.ipass_role LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThatThrownBy(() -> jdbc.update(
-        "INSERT INTO pharos_uam.okta_account_role_assignment(okta_account_id,role_id,assigned_at,assignment_event_id) "
-        + "SELECT okta_account_id,role_id,assigned_at,assignment_event_id "
-        + "FROM pharos_uam.okta_account_role_assignment WHERE removed_at IS NULL LIMIT 1"))
+        "INSERT INTO pharos_uam.employee_role_assignment(employee_id,role_id,assigned_at,assignment_event_id) "
+        + "SELECT employee_id,role_id,assigned_at,assignment_event_id "
+        + "FROM pharos_uam.employee_role_assignment WHERE removed_at IS NULL LIMIT 1"))
       .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     assertThat(active()).isEqualTo(3);
   }
 
   @Test
-  void assignmentRequiresAnExistingAccount() throws Exception {
+  void assignmentRequiresAnExistingEmployee() throws Exception {
     assertThat(post(initial).status()).isEqualTo(200);
-    assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.okta_account_role_assignment(okta_account_id,role_id,assigned_at,assignment_event_id) "
-        + "SELECT ?,role_id,now(),? FROM pharos_uam.ipass_role LIMIT 1", "00u-nonexistent",
+    assertThatThrownBy(() -> jdbc.update("INSERT INTO pharos_uam.employee_role_assignment(employee_id,role_id,assigned_at,assignment_event_id) "
+        + "SELECT ?,role_id,now(),? FROM pharos_uam.ipass_role LIMIT 1", "MISSING-EMPLOYEE",
         UUID.fromString(initial.get("eventId").asString())))
       .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
-      .hasMessageContaining("fk_account_role_account");
+      .hasMessageContaining("fk_employee_role_employee");
   }
 
   @Test
-  void updatingOneAccountDoesNotRemoveAnotherAccountsRoles() throws Exception {
-    post(initial);
+  void employeeCannotSwitchToAnotherOktaAccount() throws Exception {
+    assertThat(post(initial).status()).isEqualTo(200);
     ObjectNode second = next("USER_UPDATED");
     ((ObjectNode) second.get("user")).put("oktaAccountId", "00u-second");
-    assertThat(post(second).status()).isEqualTo(200);
-    assertThat(active()).isEqualTo(6);
-    ObjectNode empty = next("USER_UPDATED");
-    ((ObjectNode) empty.get("user")).putArray("iPassRoles");
-    assertThat(post(empty).status()).isEqualTo(200);
+    assertThat(post(second).status()).isEqualTo(400);
     assertThat(active()).isEqualTo(3);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account", Long.class)).isEqualTo(2);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_role", Long.class)).isEqualTo(3);
+    assertThat(jdbc.queryForObject("SELECT okta_account_id FROM pharos_uam.employee", String.class))
+      .isEqualTo(initial.get("user").get("oktaAccountId").asString());
   }
 
   @Test
@@ -332,23 +328,23 @@ class EmployeeLifecycleIT {
   }
 
   @Test
-  void terminationClosesAllAccountsAndRestorationOnlyRestoresSuppliedAccount() throws Exception {
-    post(initial);
-    ObjectNode second = next("USER_UPDATED");
-    ((ObjectNode) second.get("user")).put("oktaAccountId", "00u-second");
-    post(second);
+  void terminationAndRestorationPreserveOtherEmployeesAssignments() throws Exception {
+    assertThat(post(initial).status()).isEqualTo(200);
+    ObjectNode other = next("USER_PROVISIONED");
+    ((ObjectNode) other.get("user")).put("employeeId", "OTHER").put("oktaAccountId", "00u-other");
+    assertThat(post(other).status()).isEqualTo(200);
     assertThat(post(termination()).status()).isEqualTo(200);
-    assertThat(active()).isZero();
+    assertThat(active()).isEqualTo(3);
     ObjectNode restore = next("USER_PROVISIONED");
     restore.put("eventEffectiveAt", "2026-09-02T09:00:00Z");
     for (JsonNode role : restore.get("user").get("iPassRoles")) {
       ((ObjectNode) role).put("assignedAt", "2026-09-02T09:00:00Z");
     }
     assertThat(post(restore).status()).isEqualTo(200);
-    assertThat(active()).isEqualTo(3);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account_role_assignment ar JOIN pharos_uam.okta_account a USING(okta_account_id) WHERE a."
-        + "okta_account_id='00u-second' AND ar.removed_at IS NULL", Long.class))
-      .isZero();
+    assertThat(active()).isEqualTo(6);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee_role_assignment WHERE employee_id='OTHER' AND removed_at IS "
+        + "NULL", Long.class))
+      .isEqualTo(3);
   }
 
   @Test
@@ -356,22 +352,22 @@ class EmployeeLifecycleIT {
     assertThat(post(initial).status()).isEqualTo(200);
     assertThat(post(next("USER_UPDATED")).status()).isEqualTo(200);
     assertThat(active()).isEqualTo(3);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account", Long.class)).isEqualTo(1);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee", Long.class)).isEqualTo(1);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_role", Long.class)).isEqualTo(3);
   }
 
   @Test
-  void employeeReadIncludesAccountsAndEntitlements() throws Exception {
+  void employeeReadIncludesOktaIdAndEntitlements() throws Exception {
     post(initial);
     var response = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482")).GET().build(),
         HttpResponse.BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(200);
     JsonNode body = mapper.readTree(response.body());
-    assertThat(body.get("accounts").size()).isEqualTo(1);
-    JsonNode account = body.get("accounts").get(0);
+    assertThat(body.has("accounts")).isFalse();
+    JsonNode account = body;
     assertThat(account.get("assignments").size()).isEqualTo(3);
     UUID.fromString(account.get("assignments").get(0).get("assignmentId").asString());
-    assertThat(jdbc.queryForObject("SELECT okta_account_id FROM pharos_uam.okta_account LIMIT 1", String.class))
+    assertThat(jdbc.queryForObject("SELECT okta_account_id FROM pharos_uam.employee LIMIT 1", String.class))
       .isEqualTo(initial.get("user").get("oktaAccountId").asString());
     assertThat(jdbc.queryForObject("SELECT role_id FROM pharos_uam.ipass_role LIMIT 1", UUID.class)).isNotNull();
     assertThat(response.body()).doesNotContain("permissionMappingStatus", "authorizationEligible", "permission_mapping_status");
@@ -402,16 +398,14 @@ class EmployeeLifecycleIT {
       .isZero();
     assertThat(post(initial).status()).isEqualTo(200);
     String times =
-        "SELECT e.updated_at,a.updated_at,r.updated_at FROM pharos_uam.employee e JOIN pharos_uam.okta_account a "
-        + "USING(employee_id) CROSS JOIN pharos_uam.ipass_role r " + "WHERE r.entitlement_value='00g8n4q2r6T9vWxYz0h7'";
-    var before = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant(),
-        rs.getTimestamp(3).toInstant()));
+        "SELECT e.updated_at,r.updated_at FROM pharos_uam.employee e " + "CROSS JOIN pharos_uam.ipass_role r "
+        + "WHERE r.entitlement_value='00g8n4q2r6T9vWxYz0h7'";
+    var before = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant()));
     ObjectNode update = next("USER_UPDATED");
     ((ObjectNode) update.get("user")).put("city", "New York");
     assertThat(post(update).status()).isEqualTo(200);
-    var after = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant(),
-        rs.getTimestamp(3).toInstant()));
-    for (int j = 0; j < 3; j++) {
+    var after = jdbc.queryForObject(times, (rs, row) -> java.util.List.of(rs.getTimestamp(1).toInstant(), rs.getTimestamp(2).toInstant()));
+    for (int j = 0; j < 2; j++) {
       assertThat(after.get(j)).isAfter(before.get(j));
     }
     assertThat(post(termination()).status()).isEqualTo(200);
@@ -434,40 +428,19 @@ class EmployeeLifecycleIT {
   }
 
   @Test
-  void twoSourceAccountsWithUnknownEnvironmentRemainSeparate() throws Exception {
-    ObjectNode user = (ObjectNode) initial.get("user");
-    ObjectNode firstRole = (ObjectNode) user.get("iPassRoles").get(0).deepCopy();
-    firstRole.put("roleName", "Pharos KYC Analyst");
-    user.putArray("iPassRoles").add(firstRole);
+  void employeesShareRoleDefinitionsButKeepIndependentAssignments() throws Exception {
     assertThat(post(initial).status()).isEqualTo(200);
-
-    ObjectNode second = next("USER_UPDATED");
-    ((ObjectNode) second.get("user")).put("oktaAccountId", "00u9j4n6p8Q3rStUv0h7");
-    ObjectNode secondRole = (ObjectNode) firstRole.deepCopy();
-    secondRole.put("entitlementValue", "00g9p5s3u7V2xYaBc0h7");
-    ((ObjectNode) second.get("user")).putArray("iPassRoles").add(secondRole);
-    assertThat(post(second).status()).isEqualTo(200);
-    var read = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/employees/WU100482")).GET().build(),
-        HttpResponse.BodyHandlers.ofString());
-    JsonNode accounts = mapper.readTree(read.body()).get("accounts");
-    assertThat(accounts.size()).isEqualTo(2);
-    assertThat(read.body()).doesNotContain("environment");
-    for (JsonNode account : accounts) {
-      assertThat(account.get("assignments").size()).isEqualTo(1);
-      String expected =
-          account.get("oktaAccountId").asString().equals("00u9j4n6p8Q3rStUv0h7") ? "00g9p5s3u7V2xYaBc0h7" : "00g8n4q2r6T9vWxYz0h7";
-      assertThat(account.get("assignments").get(0).get("entitlementValue").asString()).isEqualTo(expected);
-    }
-
-    ObjectNode emptySecond = (ObjectNode) second.deepCopy();
-    emptySecond.put("eventId", UUID.randomUUID().toString());
-    ((ObjectNode) emptySecond.get("user")).putArray("iPassRoles");
-    assertThat(post(emptySecond).status()).isEqualTo(200);
-    assertThat(active()).isEqualTo(1);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee", Long.class)).isEqualTo(1);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.okta_account", Long.class)).isEqualTo(2);
-    assertThat(post(termination()).status()).isEqualTo(200);
-    assertThat(active()).isZero();
+    ObjectNode other = next("USER_PROVISIONED");
+    ((ObjectNode) other.get("user")).put("employeeId", "OTHER").put("oktaAccountId", "00u-other");
+    assertThat(post(other).status()).isEqualTo(200);
+    ObjectNode remove = next("USER_UPDATED");
+    ((ObjectNode) remove.get("user")).putArray("iPassRoles");
+    assertThat(post(remove).status()).isEqualTo(200);
+    assertThat(active()).isEqualTo(3);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.ipass_role", Long.class)).isEqualTo(3);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM pharos_uam.employee_role_assignment WHERE employee_id='OTHER' AND removed_at IS "
+        + "NULL", Long.class))
+      .isEqualTo(3);
   }
 
   @Test
@@ -493,5 +466,12 @@ class EmployeeLifecycleIT {
     ((ObjectNode) update.get("user")).remove("supplier");
     assertThat(post(update).status()).isEqualTo(200);
     assertThat(jdbc.queryForObject("SELECT supplier FROM pharos_uam.employee", String.class)).isNull();
+  }
+
+  @Test
+  void terminationBeforeProvisioningAllowsMissingOktaId() throws Exception {
+    assertThat(post(termination()).status()).isEqualTo(200);
+    assertThat(jdbc.queryForObject("SELECT okta_account_id FROM pharos_uam.employee", String.class)).isNull();
+    assertThat(jdbc.queryForObject("SELECT employment_status FROM pharos_uam.employee", String.class)).isEqualTo("TERMINATED");
   }
 }

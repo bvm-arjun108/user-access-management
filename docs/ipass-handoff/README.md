@@ -16,19 +16,19 @@ iPass sends employee details and approved Pharos role assignments. Pharos stores
 | Event | Send when | Payload / result |
 | --- | --- | --- |
 | `USER_PROVISIONED` | First approved Pharos access, approved rehire or termination correction. | Full ACTIVE profile, one account and at least one current approved role. |
-| `USER_UPDATED` | Roles or employee details change; another account is added for an active employee. | Full ACTIVE profile, one account and its complete current role list. An empty list removes all roles from that account. |
-| `USER_TERMINATED` | Employment termination becomes effective. | Employee ID and TERMINATED status; termination date when known. Closes every current role assignment for that employee across all stored accounts. |
+| `USER_UPDATED` | Roles or employee details change. | Full ACTIVE profile, one account and its complete current role list. An empty list removes all roles from that account. |
+| `USER_TERMINATED` | Employment termination becomes effective. | Employee ID and TERMINATED status; termination date when known. Closes every current role assignment for that employee for the employee. |
 
-Do not send hires without Pharos access, pending requests or unrelated application roles. Send termination immediately, including for previously provisioned employees with no remaining roles; do not wait for the 15-day iPass cleanup. USER_UPDATED cannot restore terminated employment.
+Do not send hires without Pharos access, pending requests or unrelated application roles. Product permits termination notification within 15 days. Send USER_TERMINATED when iPass completes cleanup; Pharos closes assignments when it processes the event. Until then, Pharos retains the last received status and assignments. USER_UPDATED cannot restore terminated employment.
 
 ## Payload rules
 
 | Rule | Requirement |
 | --- | --- |
-| Account scope | One employee and one oktaAccountId per provisioning/update call. Send separate calls for distinct Okta accounts. |
+| Account scope | One employee and its unique oktaAccountId per provisioning/update call. A different account ID for the same employee is rejected. |
 | Complete role list | `user.iPassRoles` contains all current Pharos roles for that account. Omitted roles are removed. Missing/null is rejected. Maximum 500 roles. |
 | Identity | Employee: `employeeId` (source Owner ID). Account: `oktaAccountId`. Role: `entitlementValue`. Keep identifiers stable and preserve their case. |
-| Environment / owners | No environment field or inference. Source Owner First/Last describe the employee; role owners are not supplied. |
+| Environment / owners | No environment request field or parsing in the current API. Source Owner First/Last describe the employee; role owners are not supplied. |
 | Employee fields | Use every field in the full example. `email` and `supplier` may be omitted or null; either clears its saved value in a full update. `middleName` may be null. ACTIVE requires `terminationDate: null`. Manager ID, first name and last name are required; manager middleName is required but may be null. |
 | Role fields | Every shown role field is required. `assignmentStatus` is always PROVISIONED; `isPharosGroup` must be true. Send JSON booleans, not strings. Requestability/privilege flags are metadata. |
 | Dates | Dates: YYYY-MM-DD. Timestamps: RFC 3339 with timezone. `eventEffectiveAt` is when the change took effect; `employeeLastSyncedAt` is when iPass refreshed employee details from Workday/VNDLY. |
@@ -45,12 +45,12 @@ The Swagger example selector contains these six cases. Each is a complete reques
 
 | Use case | Event type | Expected result |
 | --- | --- | --- |
-| First Pharos access | `USER_PROVISIONED` | Create the employee and account with the complete approved role list. |
+| First Pharos access | `USER_PROVISIONED` | Create the employee with its Okta ID and complete approved role list. |
 | Remove one role | `USER_UPDATED` | Omit GSI; retain every other current role for this account. |
 | Add a role | `USER_UPDATED` | Include GDD together with every existing current role for this account. |
 | Remove all roles | `USER_UPDATED` | Send iPassRoles: []; employment remains ACTIVE and the account has no current roles. |
-| Terminate employee | `USER_TERMINATED` | Close current assignments across all employee accounts immediately. |
-| Restore access after termination correction | `USER_PROVISIONED` | Send the approved ACTIVE profile and current roles for the account being restored. |
+| Terminate employee | `USER_TERMINATED` | Close current assignments when Pharos processes the notification. |
+| Restore access after termination correction | `USER_PROVISIONED` | Send the approved ACTIVE profile and current roles for the employee being restored. |
 
 Fictional data. USER_UPDATED uses the full provisioning structure with a new event ID, the effective time of the change and the complete current account snapshot. To remove every role, send that full structure with `iPassRoles: []`.
 
@@ -245,7 +245,7 @@ HTTP 200 means the event was saved successfully or was already applied. An ident
 | 400 | Resolve the invalid payload, identity conflict or business rule. Submit corrected content with a new event UUID. |
 | Timeout / connection failure / 500 | Retry the same event UUID and unchanged payload with backoff. If retries fail, retain the event for investigation and replay. |
 
-Generate a new UUID for each new event. Reuse that UUID only for delivery of the identical event. Preserve event order per employee across all accounts, including retries. Pharos does not reject stale events automatically; do not replay an older snapshot after a newer one. Agree retry limits and urgent termination-failure escalation before go-live.
+Generate a new UUID for each new event. Reuse that UUID only for delivery of the identical event. Preserve event order per employee including retries. Pharos does not reject stale events automatically; do not replay an older snapshot after a newer one. Agree retry limits and urgent termination-failure escalation before go-live.
 
 Error JSON contains `timestamp`, `status`, `code`, `message` and `correlationId`. Use the message to resolve the failure; provide eventId and correlationId to Pharos support.
 
